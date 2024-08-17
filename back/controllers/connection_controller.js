@@ -1,12 +1,8 @@
-const mongoose = require("mongoose");
-mongoose.connect(
-  "mongodb+srv://ishainwa:vrmk88rdIL@clusterexpressjsbanking.jxpacsp.mongodb.net/?retryWrites=true&w=majority&appName=ClusterExpressJSBanking",
-);
-
-const nodemailer = require("nodemailer");
 const User = require("../model/User");
 const Balance = require("../model/Balance");
 const PendingUser = require("../model/PendingUsers");
+
+const nodemailer = require("nodemailer");
 const bcrypt = require("bcrypt");
 var validator = require("email-validator");
 require("dotenv").config();
@@ -40,7 +36,14 @@ async function validateRegistrationDetails(req, res, next) {
     return;
   }
 
+  // try {
+  //   const user = await isUniqueEmail(userEmail);
+  // } catch (error) {
+  //   // error handling
+  // }
+
   const user = await User.findOne({ email: userEmail });
+
   if (user) {
     sendResponse(
       res,
@@ -156,7 +159,7 @@ async function clearPendingUsers(minSubmitionTime) {
 
 /*****************************************************************************/
 
-async function completeRegitration(req, res, next) {
+async function completeRegistration(req, res, next) {
   try {
     await User.create({
       name: req.pendingUser.name,
@@ -225,6 +228,6 @@ module.exports = {
   savePendingUser,
   sendConfirmationEmail,
   verifyConfirmationPassword,
-  completeRegitration,
+  completeRegistration,
   verifyLoginCradentials,
 };

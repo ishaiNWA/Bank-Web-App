@@ -1,7 +1,3 @@
-// const mongoose = require('mongoose');
-// mongoose.connect("mongodb+srv://ishainwa:vrmk88rdIL@clusterexpressjsbanking.jxpacsp.mongodb.net/?retryWrites=true&w=majority&appName=ClusterExpressJSBanking"
-// );
-
 const Balance = require("../model/Balance");
 const User = require("../model/User");
 const Transaction = require("../model/Transactions");

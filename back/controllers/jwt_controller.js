@@ -1,8 +1,4 @@
 const jwt = require("jsonwebtoken");
-const mongoose = require("mongoose");
-mongoose.connect(
-  "mongodb+srv://ishainwa:vrmk88rdIL@clusterexpressjsbanking.jxpacsp.mongodb.net/?retryWrites=true&w=majority&appName=ClusterExpressJSBanking",
-);
 const User = require("../model/User");
 const BlackListedToken = require("../model/BlackListedToken");
 

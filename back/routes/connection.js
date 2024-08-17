@@ -14,7 +14,7 @@ router.post(
 router.post(
   "/register-confirmation",
   connectionController.verifyConfirmationPassword,
-  connectionController.completeRegitration,
+  connectionController.completeRegistration,
 );
 
 router.post(
