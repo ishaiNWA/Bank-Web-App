@@ -1,6 +1,11 @@
-const User = require("../model/User");
-const Balance = require("../model/Balance");
-const PendingUser = require("../model/PendingUsers");
+const {
+  findUserByEmail,
+  deletePendingUserByEmail,
+  createPendingUser,
+  findAndDeletePendingUser,
+  createUser,
+  createBalance,
+} = require("../database/DB_operations");
 
 const nodemailer = require("nodemailer");
 const bcrypt = require("bcrypt");
@@ -36,25 +41,22 @@ async function validateRegistrationDetails(req, res, next) {
     return;
   }
 
-  // try {
-  //   const user = await isUniqueEmail(userEmail);
-  // } catch (error) {
-  //   // error handling
-  // }
-
-  const user = await User.findOne({ email: userEmail });
-
-  if (user) {
-    sendResponse(
-      res,
-      400,
-      "email address already existed in system",
-      null,
-      null,
-    );
-    return;
+  try {
+    const user = await findUserByEmail(userEmail);
+    if (user) {
+      sendResponse(
+        res,
+        400,
+        "email address already existed in system",
+        null,
+        null,
+      );
+      return;
+    }
+    next();
+  } catch (error) {
+    sendResponse(res, 500, "internal error", "error", error);
   }
-  next();
 }
 
 /*****************************************************************************/
@@ -72,20 +74,17 @@ async function savePendingUser(req, res, next) {
   hashedPassword = await hashingThePassword(req.body.password, salt);
 
   try {
-    await PendingUser.deleteOne({
-      //confirm no duplication created
-      userEmail: req.body.userEmail,
-    });
+    await deletePendingUserByEmail(req.body.userEmail); //confirm no duplication created
 
-    await PendingUser.create({
+    await createPendingUser({
       name: req.body.name,
       confirmationPassword: generatedPassword,
       userEmail: req.body.userEmail,
-      userHashedPassword: hashedPassword,
+      userHashedPassword: hashedPassword, // You need to provide this
       salt: salt,
     });
   } catch (error) {
-    sendResponse(res, 500, "internal error", "details", error);
+    sendResponse(res, 500, "internal error", "error", error);
     console.log(error);
     return;
   }
@@ -128,12 +127,16 @@ async function verifyConfirmationPassword(req, res, next) {
   var statusExplanation;
   const minSubmitionTime = new Date(Date.now() - 60 * 15 * 1000); //ten minuts limit
   try {
-    const validPendingUser = await PendingUser.findOneAndDelete({
-      confirmationPassword: req.body.confirmationPassword,
-      submissionTime: { $gte: minSubmitionTime },
-    });
+    const validPendingUser = await findAndDeletePendingUser(
+      req.body.confirmationPassword,
+      minSubmitionTime,
+    );
+    // const validPendingUser = await PendingUser.findOneAndDelete({
+    //   confirmationPassword: req.body.confirmationPassword,
+    //   submissionTime: { $gte: minSubmitionTime },
+    // });
 
-    clearPendingUsers(minSubmitionTime); // could be depricated after updating PendingUser to be expired
+    // clearPendingUsers(minSubmitionTime); // could be depricated after updating PendingUser to be expired
 
     if (!validPendingUser) {
       status = 400;
@@ -153,23 +156,34 @@ async function verifyConfirmationPassword(req, res, next) {
 
 /*****************************************************************************/
 
-async function clearPendingUsers(minSubmitionTime) {
-  PendingUser.deleteMany({ submissionTime: { $lte: minSubmitionTime } });
-}
+// async function clearPendingUsers(minSubmitionTime) {
+//   PendingUser.deleteMany({ submissionTime: { $lte: minSubmitionTime } });
+// }
 
 /*****************************************************************************/
 
 async function completeRegistration(req, res, next) {
   try {
-    await User.create({
+    // await User.create({
+    //   name: req.pendingUser.name,
+    //   email: req.pendingUser.userEmail,
+    //   hashedPassword: req.pendingUser.userHashedPassword,
+    //   salt: req.pendingUser.salt,
+    // });
+
+    console.log(req.pendingUser);
+    await createUser({
       name: req.pendingUser.name,
       email: req.pendingUser.userEmail,
       hashedPassword: req.pendingUser.userHashedPassword,
       salt: req.pendingUser.salt,
     });
-    await Balance.create({
-      email: req.pendingUser.userEmail,
-    });
+
+    await createBalance(req.pendingUser.userEmail);
+
+    // await Balance.create({
+    //   email: req.pendingUser.userEmail,
+    // });
     sendResponse(res, 200, "user has been successfully registered", null, null);
   } catch (error) {
     console.log(error);
@@ -179,10 +193,10 @@ async function completeRegistration(req, res, next) {
 
 /*****************************************************************************/
 
-async function verifyLoginCradentials(req, res, next) {
+async function verifyLoginCredentials(req, res, next) {
   const { userEmail, password } = req.body;
 
-  var registeredUser = await User.findOne({ email: userEmail });
+  var registeredUser = await findUserByEmail(userEmail);
   if (!registeredUser) {
     sendResponse(res, 400, "wrong email", null, null);
     return;
@@ -229,5 +243,5 @@ module.exports = {
   sendConfirmationEmail,
   verifyConfirmationPassword,
   completeRegistration,
-  verifyLoginCradentials,
+  verifyLoginCredentials,
 };

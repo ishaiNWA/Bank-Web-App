@@ -1,3 +1,4 @@
+require("dotenv").config();
 const mongoose = require("mongoose");
 const { Schema, model } = mongoose;
 
@@ -10,6 +11,7 @@ const blackListedTokensSchema = new Schema({
     type: Date,
     default: Date.now,
     expires: 3600, // 3600 seconds = 1 hour
+    expires: parseInt(process.env.BLACK_LISTED_TOKEN_EXPIRATION_SECONDS),
   },
 });
 

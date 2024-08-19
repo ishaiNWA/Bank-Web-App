@@ -1,6 +1,10 @@
 const jwt = require("jsonwebtoken");
-const User = require("../model/User");
-const BlackListedToken = require("../model/BlackListedToken");
+
+const {
+  createBlackListedToken,
+  isBlackListedToken,
+  findUserByEmail,
+} = require("../database/DB_operations");
 
 /*****************************************************************************/
 
@@ -27,8 +31,8 @@ async function verifyJWT(req, res, next) {
   }
 
   try {
-    const result = await isBlackListedToken(token);
-    if (result) {
+    // const result = await isBlackListedToken(token);
+    if (await isBlackListedToken(token)) {
       sendResponse(
         res,
         400,
@@ -36,6 +40,7 @@ async function verifyJWT(req, res, next) {
       );
       return;
     }
+
     var decodedToken = decodeToken(token);
   } catch (error) {
     if (error.name === "TokenExpiredError") {
@@ -47,29 +52,28 @@ async function verifyJWT(req, res, next) {
   }
 
   const userEmail = decodedToken.email;
-  const isExistedUser = await findUser(userEmail, req);
 
-  if (!isExistedUser) {
+  if (!(await findUserByEmail(userEmail))) {
     sendResponse(res, 400, "user was not found");
     return;
   } else {
     req.userEmail = userEmail;
-    //  req.mongoose = mongoose.connection;
+
     next();
   }
 }
 
 /*****************************************************************************/
 
-async function findUser(userEmail, req) {
-  user = await User.findOne({ email: userEmail });
+// async function findUser(userEmail, req) {
+//   user = await User.findOne({ email: userEmail });
 
-  if (!user) {
-    return false;
-  } else {
-    return true;
-  }
-}
+//   if (!user) {
+//     return false;
+//   } else {
+//     return true;
+//   }
+// }
 
 /*****************************************************************************/
 
@@ -80,10 +84,9 @@ async function blacklistToken(req, res, next) {
     return;
   }
   try {
-    await BlackListedToken.create({
-      token: token,
-    });
+    await createBlackListedToken(token);
   } catch (error) {
+    console.log(error);
     sendResponse(res, 400, error);
     return;
   }
@@ -107,12 +110,6 @@ function extractToken(req) {
   } else {
     return bearerHeader.split("Bearer")[1];
   }
-}
-
-/*****************************************************************************/
-
-async function isBlackListedToken(token) {
-  return await BlackListedToken.findOne({ token: token });
 }
 
 /*****************************************************************************/

@@ -19,7 +19,7 @@ router.post(
 
 router.post(
   "/login",
-  connectionController.verifyLoginCradentials,
+  connectionController.verifyLoginCredentials,
   jwtController.generateJWT,
 );
 

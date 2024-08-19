@@ -1,9 +1,15 @@
-const Balance = require("../model/Balance");
-const User = require("../model/User");
-const Transaction = require("../model/Transactions");
+const {
+  findBalanceByEmail,
+  findUsersTransactions,
+  findUserByEmail,
+  addToRecipient,
+  subtractFromSender,
+  registerTrasaction,
+} = require("../database/DB_operations");
 
 async function getBalance(req, res, next) {
-  const usersBalance = await Balance.findOne({ email: req.userEmail });
+  const usersBalance = await findBalanceByEmail(req.userEmail);
+
   if (!usersBalance) {
     sendResponse(res, 400, "user's balance not found", null, null);
   } else {
@@ -27,13 +33,7 @@ async function getTransactions(req, res, next) {
   var transactions;
 
   try {
-    transactions = await Transaction.find({
-      $or: [{ senderEmail: req.userEmail }, { recipientEmail: req.userEmail }],
-    })
-      .sort({ date: -1 })
-      .skip(offset)
-      .limit(limit)
-      .exec();
+    transactions = await findUsersTransactions(req.userEmail, offset, limit);
   } catch (error) {
     sendResponse(res, 500, "inernal error", null, null);
   }
@@ -50,13 +50,13 @@ async function getTransactions(req, res, next) {
 /*****************************************************************************/
 
 async function performTransaction(req, res, next) {
-  const isSufficient = await isSufficientFunds(req);
+  const isSufficient = await isSufficientFunds(req.userEmail, req.body.amount);
   if (!isSufficient) {
     sendResponse(res, 402, "insufficient funds", null, null);
     return;
   }
 
-  const isValid = await isValidRecipient(req);
+  const isValid = await isValidRecipient(req.body.recipientEmail);
   if (!isValid) {
     sendResponse(res, 404, "invalid recipient", null, null);
     return;
@@ -64,13 +64,23 @@ async function performTransaction(req, res, next) {
 
   var updatedSenderBalance = null;
   try {
-    await addToRecipient(req);
-    updatedSenderBalance = await subtractFromSender(req);
-    await registerTrasaction(req);
+    await addToRecipient(req.body.recipientEmail, req.body.amount);
+
+    updatedSenderBalance = await subtractFromSender(
+      req.userEmail,
+      req.body.amount,
+    );
+    await registerTrasaction(
+      req.userEmail,
+      req.body.recipientEmail,
+      req.body.amount,
+    );
   } catch (error) {
-    sendResponse(res, 500, "inernal error", null, null);
+    sendResponse(res, 500, "inernal error", "error", error);
+    return;
   }
 
+  console.log("updatedSenderBalance.balance " + updatedSenderBalance.balance);
   sendResponse(
     res,
     200,
@@ -82,58 +92,16 @@ async function performTransaction(req, res, next) {
 
 /*****************************************************************************/
 
-async function subtractFromSender(req) {
-  const updatedBalance = await Balance.findOneAndUpdate(
-    { email: req.userEmail },
-    { $inc: { balance: -req.body.amount } },
-    { new: true },
-  );
-
-  return updatedBalance;
+async function isValidRecipient(recipientEmail) {
+  return !!(await findUserByEmail(recipientEmail));
 }
 
 /*****************************************************************************/
 
-async function addToRecipient(req) {
-  await Balance.findOneAndUpdate(
-    { email: req.body.recipientEmail },
-    { $inc: { balance: req.body.amount } },
-  );
-}
-
-/*****************************************************************************/
-
-async function registerTrasaction(req) {
-  await Transaction.create({
-    senderEmail: req.userEmail, //the 'userEmail' was added by "verify JWT" function, so it's not in the "body"
-    recipientEmail: req.body.recipientEmail,
-    amount: req.body.amount,
-  });
-}
-
-/*****************************************************************************/
-
-async function isValidRecipient(req) {
-  const user = await User.findOne({ email: req.body.recipientEmail });
-  if (!user) {
-    return false;
-  } else {
-    return true;
-  }
-}
-
-/*****************************************************************************/
-
-async function isSufficientFunds(req) {
-  const sendersBalanceDocument = await Balance.findOne({
-    email: req.userEmail,
-  });
-  const currentSendersBalance = sendersBalanceDocument.balance;
-  if (currentSendersBalance < req.body.amount) {
-    return false;
-  } else {
-    return true;
-  }
+async function isSufficientFunds(email, amount) {
+  const sendersBalanceObj = await findBalanceByEmail(email);
+  const currentSendersBalance = sendersBalanceObj.balance;
+  return sendersBalanceObj.balance >= amount;
 }
 
 /*****************************************************************************/

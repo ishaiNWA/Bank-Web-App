@@ -1,3 +1,4 @@
+require("dotenv").config();
 const mongoose = require("mongoose");
 const { Schema, model } = mongoose;
 
@@ -27,6 +28,7 @@ const pendingUserSchema = new Schema({
   submissionTime: {
     type: Date,
     default: Date.now,
+    expires: parseInt(process.env.PENDING_USER_EXPIRATION_SECONDS),
   },
 });
 
