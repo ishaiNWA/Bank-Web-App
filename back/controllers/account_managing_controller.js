@@ -1,14 +1,14 @@
 const {
-  findBalanceByEmail,
   findUsersTransactions,
   findUserByEmail,
   addToRecipient,
   subtractFromSender,
   registerTrasaction,
+  findUserBalance,
 } = require("../database/DB_operations");
 
 async function getBalance(req, res, next) {
-  const usersBalance = await findBalanceByEmail(req.userEmail);
+  const usersBalance = await findUserBalance(req.userEmail);
 
   if (!usersBalance) {
     sendResponse(res, 400, "user's balance not found", null, null);
@@ -18,7 +18,7 @@ async function getBalance(req, res, next) {
       200,
       "successfully found user's balance",
       "balance",
-      usersBalance.balance,
+      usersBalance,
     );
   }
 }
@@ -80,13 +80,12 @@ async function performTransaction(req, res, next) {
     return;
   }
 
-  console.log("updatedSenderBalance.balance " + updatedSenderBalance.balance);
   sendResponse(
     res,
     200,
     "successful transaction",
     "current balance",
-    updatedSenderBalance.balance,
+    updatedSenderBalance,
   );
 }
 
@@ -99,9 +98,8 @@ async function isValidRecipient(recipientEmail) {
 /*****************************************************************************/
 
 async function isSufficientFunds(email, amount) {
-  const sendersBalanceObj = await findBalanceByEmail(email);
-  const currentSendersBalance = sendersBalanceObj.balance;
-  return sendersBalanceObj.balance >= amount;
+  const sendersBalance = await findUserBalance(email);
+  return sendersBalance >= amount;
 }
 
 /*****************************************************************************/

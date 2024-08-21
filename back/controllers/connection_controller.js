@@ -4,7 +4,6 @@ const {
   createPendingUser,
   findAndDeletePendingUser,
   createUser,
-  createBalance,
 } = require("../database/DB_operations");
 
 const nodemailer = require("nodemailer");
@@ -131,12 +130,6 @@ async function verifyConfirmationPassword(req, res, next) {
       req.body.confirmationPassword,
       minSubmitionTime,
     );
-    // const validPendingUser = await PendingUser.findOneAndDelete({
-    //   confirmationPassword: req.body.confirmationPassword,
-    //   submissionTime: { $gte: minSubmitionTime },
-    // });
-
-    // clearPendingUsers(minSubmitionTime); // could be depricated after updating PendingUser to be expired
 
     if (!validPendingUser) {
       status = 400;
@@ -156,21 +149,8 @@ async function verifyConfirmationPassword(req, res, next) {
 
 /*****************************************************************************/
 
-// async function clearPendingUsers(minSubmitionTime) {
-//   PendingUser.deleteMany({ submissionTime: { $lte: minSubmitionTime } });
-// }
-
-/*****************************************************************************/
-
 async function completeRegistration(req, res, next) {
   try {
-    // await User.create({
-    //   name: req.pendingUser.name,
-    //   email: req.pendingUser.userEmail,
-    //   hashedPassword: req.pendingUser.userHashedPassword,
-    //   salt: req.pendingUser.salt,
-    // });
-
     console.log(req.pendingUser);
     await createUser({
       name: req.pendingUser.name,
@@ -179,11 +159,6 @@ async function completeRegistration(req, res, next) {
       salt: req.pendingUser.salt,
     });
 
-    await createBalance(req.pendingUser.userEmail);
-
-    // await Balance.create({
-    //   email: req.pendingUser.userEmail,
-    // });
     sendResponse(res, 200, "user has been successfully registered", null, null);
   } catch (error) {
     console.log(error);

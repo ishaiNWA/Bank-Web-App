@@ -1,8 +1,6 @@
 require("dotenv").config();
 const mongoose = require("mongoose");
-
 const User = require("../model/User");
-const Balance = require("../model/Balance");
 const PendingUser = require("../model/PendingUsers");
 const Transaction = require("../model/Transactions");
 const BlackListedToken = require("../model/BlackListedToken");
@@ -20,13 +18,18 @@ async function findUserByEmail(email) {
 }
 /*****************************************************************************/
 
-async function findBalanceByEmail(email) {
-  return await Balance.findOne({ email: email });
+async function findUserBalance(email) {
+  const userBalance = await User.findOne(
+    { email: email },
+    { balance: 1, _id: 0 },
+  );
+  return userBalance.balance;
 }
+
 /*****************************************************************************/
 
 async function addToRecipient(recipientEmail, amount) {
-  return await Balance.findOneAndUpdate(
+  await User.updateOne(
     { email: recipientEmail },
     { $inc: { balance: amount } },
   );
@@ -34,11 +37,13 @@ async function addToRecipient(recipientEmail, amount) {
 /*****************************************************************************/
 
 async function subtractFromSender(userEmail, amount) {
-  return await Balance.findOneAndUpdate(
+  const userBalance = await User.findOneAndUpdate(
     { email: userEmail },
     { $inc: { balance: -amount } },
-    { new: true },
+    { new: true, select: "balance" },
   );
+
+  return userBalance.balance;
 }
 /*****************************************************************************/
 
@@ -66,14 +71,6 @@ async function createPendingUser(pendingUserObj) {
     userEmail: pendingUserObj.userEmail,
     userHashedPassword: pendingUserObj.userHashedPassword,
     salt: pendingUserObj.salt,
-  });
-}
-/*****************************************************************************/
-
-// should go into USER document
-async function createBalance(email) {
-  await Balance.create({
-    email: email,
   });
 }
 /*****************************************************************************/
@@ -127,12 +124,11 @@ module.exports = {
   createPendingUser,
   findAndDeletePendingUser,
   createUser,
-  createBalance,
   createBlackListedToken,
   isBlackListedToken,
-  findBalanceByEmail,
   findUsersTransactions,
   addToRecipient,
   subtractFromSender,
   registerTrasaction,
+  findUserBalance,
 };

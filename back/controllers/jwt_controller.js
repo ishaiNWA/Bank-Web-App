@@ -31,7 +31,6 @@ async function verifyJWT(req, res, next) {
   }
 
   try {
-    // const result = await isBlackListedToken(token);
     if (await isBlackListedToken(token)) {
       sendResponse(
         res,
@@ -62,18 +61,6 @@ async function verifyJWT(req, res, next) {
     next();
   }
 }
-
-/*****************************************************************************/
-
-// async function findUser(userEmail, req) {
-//   user = await User.findOne({ email: userEmail });
-
-//   if (!user) {
-//     return false;
-//   } else {
-//     return true;
-//   }
-// }
 
 /*****************************************************************************/
 
