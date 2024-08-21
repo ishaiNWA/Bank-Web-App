@@ -1,9 +1,10 @@
 const {
+  mongoose,
   findUsersTransactions,
   findUserByEmail,
   addToRecipient,
   subtractFromSender,
-  registerTrasaction,
+  registerTransaction,
   findUserBalance,
 } = require("../database/DB_operations");
 
@@ -56,28 +57,38 @@ async function performTransaction(req, res, next) {
     return;
   }
 
-  const isValid = await isValidRecipient(req.body.recipientEmail);
+  const isValid = await isValidRecipient(req.body.recipientEmail); // could be part of addToREcipient
   if (!isValid) {
     sendResponse(res, 404, "invalid recipient", null, null);
     return;
   }
 
-  var updatedSenderBalance = null;
+  let updatedSenderBalance = null;
+  var session;
   try {
-    await addToRecipient(req.body.recipientEmail, req.body.amount);
+    session = await mongoose.startSession();
+    await session.withTransaction(async () => {
+      await addToRecipient(req.body.recipientEmail, req.body.amount, session);
 
-    updatedSenderBalance = await subtractFromSender(
-      req.userEmail,
-      req.body.amount,
-    );
-    await registerTrasaction(
-      req.userEmail,
-      req.body.recipientEmail,
-      req.body.amount,
-    );
+      updatedSenderBalance = await subtractFromSender(
+        req.userEmail,
+        req.body.amount,
+        session,
+      );
+      await registerTransaction(
+        req.userEmail,
+        req.body.recipientEmail,
+        req.body.amount,
+        session,
+      );
+    });
   } catch (error) {
     sendResponse(res, 500, "inernal error", "error", error);
     return;
+  } finally {
+    if (session) {
+      await session.endSession();
+    }
   }
 
   sendResponse(

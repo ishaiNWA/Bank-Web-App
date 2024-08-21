@@ -1,4 +1,5 @@
 const {
+  mongoose,
   findUserByEmail,
   deletePendingUserByEmail,
   createPendingUser,
@@ -41,8 +42,7 @@ async function validateRegistrationDetails(req, res, next) {
   }
 
   try {
-    const user = await findUserByEmail(userEmail);
-    if (user) {
+    if (await isUserNameExisted(userEmail)) {
       sendResponse(
         res,
         400,
@@ -60,6 +60,11 @@ async function validateRegistrationDetails(req, res, next) {
 
 /*****************************************************************************/
 
+async function isUserNameExisted(userEmail) {
+  return !!(await findUserByEmail(userEmail));
+}
+
+/*****************************************************************************/
 function isValidName(name) {
   let nameRegex = /^[a-zA-Z]{1,20}$/;
   return nameRegex.test(name);
@@ -70,22 +75,33 @@ function isValidName(name) {
 async function savePendingUser(req, res, next) {
   const generatedPassword = Math.random().toString(36).slice(-8);
   const salt = await bcrypt.genSalt(10);
-  hashedPassword = await hashingThePassword(req.body.password, salt);
+  const hashedPassword = await hashingThePassword(req.body.password, salt);
 
+  let session;
   try {
-    await deletePendingUserByEmail(req.body.userEmail); //confirm no duplication created
+    session = await mongoose.startSession();
+    await session.withTransaction(async () => {
+      await deletePendingUserByEmail(req.body.userEmail, session); //confirm no duplication created
 
-    await createPendingUser({
-      name: req.body.name,
-      confirmationPassword: generatedPassword,
-      userEmail: req.body.userEmail,
-      userHashedPassword: hashedPassword, // You need to provide this
-      salt: salt,
+      await createPendingUser(
+        {
+          name: req.body.name,
+          confirmationPassword: generatedPassword,
+          userEmail: req.body.userEmail,
+          userHashedPassword: hashedPassword, // You need to provide this
+          salt: salt,
+        },
+        session,
+      );
     });
   } catch (error) {
     sendResponse(res, 500, "internal error", "error", error);
     console.log(error);
     return;
+  } finally {
+    if (session) {
+      await session.endSession();
+    }
   }
 
   req.confirmationPassword = generatedPassword;
@@ -151,7 +167,6 @@ async function verifyConfirmationPassword(req, res, next) {
 
 async function completeRegistration(req, res, next) {
   try {
-    console.log(req.pendingUser);
     await createUser({
       name: req.pendingUser.name,
       email: req.pendingUser.userEmail,

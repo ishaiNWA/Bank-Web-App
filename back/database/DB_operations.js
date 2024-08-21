@@ -28,29 +28,33 @@ async function findUserBalance(email) {
 
 /*****************************************************************************/
 
-async function addToRecipient(recipientEmail, amount) {
+async function addToRecipient(recipientEmail, amount, session = null) {
   await User.updateOne(
     { email: recipientEmail },
     { $inc: { balance: amount } },
+    { session },
   );
 }
 /*****************************************************************************/
 
-async function subtractFromSender(userEmail, amount) {
+async function subtractFromSender(userEmail, amount, session = null) {
   const userBalance = await User.findOneAndUpdate(
     { email: userEmail },
     { $inc: { balance: -amount } },
-    { new: true, select: "balance" },
+    { new: true, select: "balance", session },
   );
 
   return userBalance.balance;
 }
 /*****************************************************************************/
 
-async function deletePendingUserByEmail(email) {
-  await PendingUser.deleteOne({
-    userEmail: email,
-  });
+async function deletePendingUserByEmail(email, session = null) {
+  await PendingUser.deleteOne(
+    {
+      userEmail: email,
+    },
+    { session },
+  );
 }
 /*****************************************************************************/
 
@@ -64,14 +68,19 @@ async function createUser(userObj) {
 }
 /*****************************************************************************/
 
-async function createPendingUser(pendingUserObj) {
-  await PendingUser.create({
-    name: pendingUserObj.name,
-    confirmationPassword: pendingUserObj.confirmationPassword,
-    userEmail: pendingUserObj.userEmail,
-    userHashedPassword: pendingUserObj.userHashedPassword,
-    salt: pendingUserObj.salt,
-  });
+async function createPendingUser(pendingUserObj, session = null) {
+  await PendingUser.create(
+    [
+      {
+        name: pendingUserObj.name,
+        confirmationPassword: pendingUserObj.confirmationPassword,
+        userEmail: pendingUserObj.userEmail,
+        userHashedPassword: pendingUserObj.userHashedPassword,
+        salt: pendingUserObj.salt,
+      },
+    ],
+    { session },
+  );
 }
 /*****************************************************************************/
 
@@ -108,16 +117,27 @@ async function findUsersTransactions(mail, offset, limit) {
 }
 /*****************************************************************************/
 
-async function registerTrasaction(userEmail, recipientEmail, amount) {
-  await Transaction.create({
-    senderEmail: userEmail,
-    recipientEmail: recipientEmail,
-    amount: amount,
-  });
+async function registerTransaction(
+  userEmail,
+  recipientEmail,
+  amount,
+  session = null,
+) {
+  await Transaction.create(
+    [
+      {
+        senderEmail: userEmail,
+        recipientEmail: recipientEmail,
+        amount: amount,
+      },
+    ],
+    { session },
+  );
 }
 /*****************************************************************************/
 
 module.exports = {
+  mongoose,
   connectToDB,
   findUserByEmail,
   deletePendingUserByEmail,
@@ -129,6 +149,6 @@ module.exports = {
   findUsersTransactions,
   addToRecipient,
   subtractFromSender,
-  registerTrasaction,
+  registerTransaction,
   findUserBalance,
 };
