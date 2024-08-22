@@ -9,19 +9,20 @@ const {
 } = require("../database/DB_operations");
 
 async function getBalance(req, res, next) {
-  const usersBalance = await findUserBalance(req.userEmail);
-
-  if (!usersBalance) {
-    sendResponse(res, 400, "user's balance not found", null, null);
-  } else {
-    sendResponse(
-      res,
-      200,
-      "successfully found user's balance",
-      "balance",
-      usersBalance,
-    );
+  let usersBalance;
+  try {
+    usersBalance = await findUserBalance(req.userEmail);
+  } catch (error) {
+    sendResponse(res, 500, "inernal error", "error", error);
+    return;
   }
+  sendResponse(
+    res,
+    200,
+    "successfully found user's balance",
+    "balance",
+    usersBalance,
+  );
 }
 
 /*****************************************************************************/
@@ -51,21 +52,20 @@ async function getTransactions(req, res, next) {
 /*****************************************************************************/
 
 async function performTransaction(req, res, next) {
-  const isSufficient = await isSufficientFunds(req.userEmail, req.body.amount);
-  if (!isSufficient) {
-    sendResponse(res, 402, "insufficient funds", null, null);
-    return;
-  }
-
-  const isValid = await isValidRecipient(req.body.recipientEmail); // could be part of addToREcipient
-  if (!isValid) {
-    sendResponse(res, 404, "invalid recipient", null, null);
-    return;
-  }
-
+  var session = null;
   let updatedSenderBalance = null;
-  var session;
   try {
+    if (!(await isSufficientFunds(req.userEmail, req.body.amount))) {
+      sendResponse(res, 402, "insufficient funds", null, null);
+      return;
+    }
+
+    const isValid = await isValidRecipient(req.body.recipientEmail); // could be part of addToREcipient
+    if (!isValid) {
+      sendResponse(res, 404, "invalid recipient", null, null);
+      return;
+    }
+
     session = await mongoose.startSession();
     await session.withTransaction(async () => {
       await addToRecipient(req.body.recipientEmail, req.body.amount, session);

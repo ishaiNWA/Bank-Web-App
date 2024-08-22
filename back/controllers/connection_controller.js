@@ -52,10 +52,10 @@ async function validateRegistrationDetails(req, res, next) {
       );
       return;
     }
-    next();
   } catch (error) {
     sendResponse(res, 500, "internal error", "error", error);
   }
+  next();
 }
 
 /*****************************************************************************/
@@ -73,12 +73,12 @@ function isValidName(name) {
 /*****************************************************************************/
 
 async function savePendingUser(req, res, next) {
-  const generatedPassword = Math.random().toString(36).slice(-8);
-  const salt = await bcrypt.genSalt(10);
-  const hashedPassword = await hashingThePassword(req.body.password, salt);
-
   let session;
   try {
+    const generatedPassword = Math.random().toString(36).slice(-8);
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await hashingThePassword(req.body.password, salt);
+
     session = await mongoose.startSession();
     await session.withTransaction(async () => {
       await deletePendingUserByEmail(req.body.userEmail, session); //confirm no duplication created
@@ -110,7 +110,7 @@ async function savePendingUser(req, res, next) {
 
 /*****************************************************************************/
 
-async function sendConfirmationEmail(req, res, next) {
+function sendConfirmationEmail(req, res, next) {
   const mailOptions = {
     from: process.env.EMAIL_USER,
     to: req.body.userEmail,
@@ -185,19 +185,20 @@ async function completeRegistration(req, res, next) {
 
 async function verifyLoginCredentials(req, res, next) {
   const { userEmail, password } = req.body;
+  let isCorrectPassword = null;
+  try {
+    var registeredUser = await findUserByEmail(userEmail);
+    if (!registeredUser) {
+      sendResponse(res, 401, "wrong email", null, null);
+      return;
+    }
 
-  var registeredUser = await findUserByEmail(userEmail);
-  if (!registeredUser) {
-    sendResponse(res, 400, "wrong email", null, null);
-    return;
-  }
-
-  let isCorrectPassword = await bcrypt.compare(
-    password,
-    registeredUser.hashedPassword,
-  );
-  if (!isCorrectPassword) {
-    sendResponse(res, 400, "wrong password", null, null);
+    if (!(await bcrypt.compare(password, registeredUser.hashedPassword))) {
+      sendResponse(res, 401, "wrong password", null, null);
+      return;
+    }
+  } catch (error) {
+    sendResponse(res, 500, "internal error", "error", error);
     return;
   }
 

@@ -8,7 +8,7 @@ const {
 
 /*****************************************************************************/
 
-async function generateJWT(req, res, next) {
+function generateJWT(req, res, next) {
   const email = { email: req.body.userEmail };
   const options = { expiresIn: "1h" };
   const token = jwt.sign(email, process.env.ACCESS_TOKEN_SECRET, options);
@@ -91,7 +91,7 @@ function decodeToken(token) {
 /*****************************************************************************/
 
 function extractToken(req) {
-  const bearerHeader = req.headers["authorization"]; //*maybe should be "Authorization" !!!
+  const bearerHeader = req.headers["authorization"];
   if (null == bearerHeader) {
     return null;
   } else {
