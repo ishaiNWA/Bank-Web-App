@@ -74,11 +74,13 @@ function isValidName(name) {
 
 async function savePendingUser(req, res, next) {
   let session;
+  let generatedPassword;
   try {
-    const generatedPassword = Math.random().toString(36).slice(-8);
+    generatedPassword = Math.random().toString(36).slice(-8);
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await hashingThePassword(req.body.password, salt);
 
+    console.log(" NOW salt is: ", salt);
     session = await mongoose.startSession();
     await session.withTransaction(async () => {
       await deletePendingUserByEmail(req.body.userEmail, session); //confirm no duplication created
@@ -95,8 +97,9 @@ async function savePendingUser(req, res, next) {
       );
     });
   } catch (error) {
-    sendResponse(res, 500, "internal error", "error", error);
     console.log(error);
+    sendResponse(res, 500, "internal error", "error", error);
+
     return;
   } finally {
     if (session) {

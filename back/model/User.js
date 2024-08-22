@@ -28,6 +28,12 @@ const userSchema = new Schema({
     type: Number,
     default: 1000,
   },
+  recentTransactions: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Transaction",
+    },
+  ],
 });
 
 // Create a model using the schema

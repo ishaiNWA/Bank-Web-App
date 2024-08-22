@@ -79,6 +79,7 @@ async function createPendingUser(pendingUserObj, session = null) {
         salt: pendingUserObj.salt,
       },
     ],
+
     { session },
   );
 }
@@ -105,16 +106,37 @@ async function createBlackListedToken(token) {
 async function isBlackListedToken(token) {
   return !!(await BlackListedToken.findOne({ token: token }));
 }
+
 /*****************************************************************************/
-async function findUsersTransactions(mail, offset, limit) {
-  return await await Transaction.find({
-    $or: [{ senderEmail: mail }, { recipientEmail: mail }],
-  })
-    .sort({ date: -1 })
-    .skip(offset)
-    .limit(limit)
-    .exec();
+
+async function findUsersTransactions(email, offset, limit) {
+  const userObj = await User.findOne({ email: email })
+    .select("recentTransactions")
+    .populate({
+      path: "recentTransactions",
+      options: {
+        sort: { _id: -1 },
+        skip: offset,
+        limit: limit,
+      },
+    })
+    .lean();
+
+  if (!userObj) {
+    throw new Error("User not found");
+  }
+
+  return userObj.recentTransactions;
 }
+
+// return await await Transaction.fi})nd({
+//   $or: [{ senderEmail: mail }, { recipientEmail: mail }],
+// })
+//   .sort({ date: -1 })
+//   .skip(offset)
+//   .limit(limit)
+//   .exec();
+
 /*****************************************************************************/
 
 async function registerTransaction(
@@ -123,7 +145,7 @@ async function registerTransaction(
   amount,
   session = null,
 ) {
-  await Transaction.create(
+  const transactionObjs = await Transaction.create(
     [
       {
         senderEmail: userEmail,
@@ -131,9 +153,37 @@ async function registerTransaction(
         amount: amount,
       },
     ],
+
+    { session },
+  );
+
+  const transactionObj = transactionObjs[0];
+  await indexTransaction(
+    transactionObj._id,
+    userEmail,
+    recipientEmail,
+    session,
+  );
+}
+/*****************************************************************************/
+
+async function indexTransaction(
+  transactionId,
+  senderEmail,
+  recipientEmail,
+  session,
+) {
+  const res = await User.updateMany(
+    { email: { $in: [senderEmail, recipientEmail] } },
+    {
+      $push: {
+        recentTransactions: transactionId,
+      },
+    },
     { session },
   );
 }
+
 /*****************************************************************************/
 
 module.exports = {
