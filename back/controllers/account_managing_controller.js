@@ -7,13 +7,13 @@ const {
   registerTransaction,
   findUserBalance,
 } = require("../database/DB_operations");
-
+const validator = require("email-validator");
 async function getBalance(req, res, next) {
   let usersBalance;
   try {
     usersBalance = await findUserBalance(req.userEmail);
   } catch (error) {
-    sendResponse(res, 500, "inernal error", "error", error);
+    sendResponse(res, 500, "internal error", "error", error);
     return;
   }
   sendResponse(
@@ -28,16 +28,27 @@ async function getBalance(req, res, next) {
 /*****************************************************************************/
 
 async function getTransactions(req, res, next) {
-  // a valdiation for correct formating and negative numbers will occur in FRONT END!
+  const limit =
+    req.query.limit === undefined || req.query.limit === ""
+      ? 10
+      : req.query.limit;
+  const offset =
+    req.query.offset === undefined || req.query.offset === ""
+      ? 0
+      : req.query.offset;
 
-  var limit = null == req.query.limit ? 10 : req.query.limit;
-  var offset = null == req.query.offset ? 0 : req.query.offset;
-  var transactions;
+  try {
+    validatePaginationParams(limit, offset);
+  } catch (error) {
+    return sendResponse(res, 400, error.message, null, null);
+  }
+
+  let transactions = null;
 
   try {
     transactions = await findUsersTransactions(req.userEmail, offset, limit);
   } catch (error) {
-    sendResponse(res, 500, "inernal error", null, null);
+    sendResponse(res, 500, "internal error", null, null);
   }
 
   sendResponse(
@@ -51,16 +62,38 @@ async function getTransactions(req, res, next) {
 
 /*****************************************************************************/
 
+function validatePaginationParams(limit, offset) {
+  if (!Number.isInteger(Number(limit)) || !Number.isInteger(Number(offset))) {
+    throw new Error("Query parameters must be integers");
+  }
+  if (limit < 1 || offset < 0) {
+    throw new Error(
+      "invalid query parameters: limit must be positive and offset must be non-negative",
+    );
+  }
+}
+
+/*****************************************************************************/
+
 async function performTransaction(req, res, next) {
-  var session = null;
-  let updatedSenderBalance = null;
+  let session;
+  let updatedSenderBalance;
+  let { recipientEmail, amount } = req.body;
+  const userEmail = req.userEmail;
+
   try {
-    if (!(await isSufficientFunds(req.userEmail, req.body.amount))) {
+    validateTransactionInputs(amount, recipientEmail);
+  } catch (error) {
+    sendResponse(res, 400, error.message, null, null);
+    return;
+  }
+  try {
+    if (!(await isSufficientFunds(userEmail, amount))) {
       sendResponse(res, 402, "insufficient funds", null, null);
       return;
     }
 
-    const isValid = await isValidRecipient(req.body.recipientEmail); // could be part of addToREcipient
+    const isValid = await isUserExist(recipientEmail);
     if (!isValid) {
       sendResponse(res, 404, "invalid recipient", null, null);
       return;
@@ -68,22 +101,17 @@ async function performTransaction(req, res, next) {
 
     session = await mongoose.startSession();
     await session.withTransaction(async () => {
-      await addToRecipient(req.body.recipientEmail, req.body.amount, session);
+      await addToRecipient(recipientEmail, amount, session);
 
       updatedSenderBalance = await subtractFromSender(
-        req.userEmail,
-        req.body.amount,
+        userEmail,
+        amount,
         session,
       );
-      await registerTransaction(
-        req.userEmail,
-        req.body.recipientEmail,
-        req.body.amount,
-        session,
-      );
+      await registerTransaction(userEmail, recipientEmail, amount, session);
     });
   } catch (error) {
-    sendResponse(res, 500, "inernal error", "error", error);
+    sendResponse(res, 500, "internal error", "error", error);
     return;
   } finally {
     if (session) {
@@ -98,11 +126,30 @@ async function performTransaction(req, res, next) {
     "current balance",
     updatedSenderBalance,
   );
+  return;
 }
 
 /*****************************************************************************/
 
-async function isValidRecipient(recipientEmail) {
+function validateTransactionInputs(amount, recipientEmail) {
+  if (!Number.isInteger(Number(amount))) {
+    throw new Error("amount must be integers");
+    return;
+  }
+
+  if (amount <= 0) {
+    throw new Error("the transaction amount must be positive value");
+    return;
+  }
+
+  if (!recipientEmail || !validator.validate(recipientEmail)) {
+    throw new Error("invalid email format");
+    return;
+  }
+}
+/*****************************************************************************/
+
+async function isUserExist(recipientEmail) {
   return !!(await findUserByEmail(recipientEmail));
 }
 
@@ -116,7 +163,7 @@ async function isSufficientFunds(email, amount) {
 /*****************************************************************************/
 
 function sendResponse(res, resStatus, responseExplanation, dataKey, dataValue) {
-  let responseBody = {
+  const responseBody = {
     explanation: responseExplanation,
   };
   if (dataKey) {

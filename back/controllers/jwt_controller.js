@@ -29,7 +29,7 @@ async function verifyJWT(req, res, next) {
     sendResponse(res, 400, "unauthorized request");
     return;
   }
-
+  let decodedToken = null;
   try {
     if (await isBlackListedToken(token)) {
       sendResponse(
@@ -40,7 +40,7 @@ async function verifyJWT(req, res, next) {
       return;
     }
 
-    var decodedToken = decodeToken(token);
+    decodedToken = decodeToken(token);
   } catch (error) {
     if (error.name === "TokenExpiredError") {
       sendResponse(res, 401, error.message);
@@ -102,7 +102,7 @@ function extractToken(req) {
 /*****************************************************************************/
 
 function sendResponse(res, resStatus, responseExplanation, dataKey, dataValue) {
-  let responseBody = {
+  const responseBody = {
     explanation: responseExplanation,
   };
   if (dataKey) {

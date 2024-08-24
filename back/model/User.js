@@ -20,10 +20,6 @@ const userSchema = new Schema({
     type: String,
     required: true,
   },
-  salt: {
-    type: String,
-    required: true,
-  },
   balance: {
     type: Number,
     default: 1000,

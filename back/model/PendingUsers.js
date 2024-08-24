@@ -21,10 +21,6 @@ const pendingUserSchema = new Schema({
     type: String,
     required: true,
   },
-  salt: {
-    type: String,
-    required: true,
-  },
   submissionTime: {
     type: Date,
     default: Date.now,

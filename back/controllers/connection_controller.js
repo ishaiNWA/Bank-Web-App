@@ -9,7 +9,7 @@ const {
 
 const nodemailer = require("nodemailer");
 const bcrypt = require("bcrypt");
-var validator = require("email-validator");
+const validator = require("email-validator");
 require("dotenv").config();
 
 const transporter = nodemailer.createTransport({
@@ -23,21 +23,12 @@ const transporter = nodemailer.createTransport({
 /*****************************************************************************/
 
 async function validateRegistrationDetails(req, res, next) {
-  const { name, userEmail } = req.body;
+  const { name, userEmail, password } = req.body;
 
-  if (!isValidName(name)) {
-    sendResponse(
-      res,
-      400,
-      "name should be 1-20 only upper/lower case letters",
-      null,
-      null,
-    );
-    return;
-  }
-
-  if (!userEmail || !validator.validate(userEmail)) {
-    sendResponse(res, 400, "invalid email format", null, null);
+  try {
+    validateUserInputsFormat(password, userEmail, name);
+  } catch (error) {
+    sendResponse(res, 400, error.message, null, null);
     return;
   }
 
@@ -60,16 +51,41 @@ async function validateRegistrationDetails(req, res, next) {
 
 /*****************************************************************************/
 
+function validateUserInputsFormat(password, userEmail, name = null) {
+  if (!password || !isValidPasswordFormat(password)) {
+    throw new Error("invalid password format");
+    return;
+  }
+  if (!userEmail || !validator.validate(userEmail)) {
+    throw new Error("invalid email format");
+  }
+  if (name) {
+    if (!isValidName(name)) {
+      throw new Error("name should be 1-20 only upper/lower case letters");
+      return;
+    }
+  }
+}
+/*****************************************************************************/
+
 async function isUserNameExisted(userEmail) {
   return !!(await findUserByEmail(userEmail));
 }
 
 /*****************************************************************************/
 function isValidName(name) {
-  let nameRegex = /^[a-zA-Z]{1,20}$/;
+  const nameRegex = /^[a-zA-Z]{1,20}$/;
   return nameRegex.test(name);
 }
 
+/*****************************************************************************/
+
+function isValidPasswordFormat(password) {
+  console.log("password is :" + password);
+  const passwordRegex =
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{5,20}$/;
+  return passwordRegex.test(password);
+}
 /*****************************************************************************/
 
 async function savePendingUser(req, res, next) {
@@ -80,7 +96,6 @@ async function savePendingUser(req, res, next) {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await hashingThePassword(req.body.password, salt);
 
-    console.log(" NOW salt is: ", salt);
     session = await mongoose.startSession();
     await session.withTransaction(async () => {
       await deletePendingUserByEmail(req.body.userEmail, session); //confirm no duplication created
@@ -90,8 +105,7 @@ async function savePendingUser(req, res, next) {
           name: req.body.name,
           confirmationPassword: generatedPassword,
           userEmail: req.body.userEmail,
-          userHashedPassword: hashedPassword, // You need to provide this
-          salt: salt,
+          userHashedPassword: hashedPassword,
         },
         session,
       );
@@ -141,8 +155,8 @@ function sendConfirmationEmail(req, res, next) {
 /*****************************************************************************/
 
 async function verifyConfirmationPassword(req, res, next) {
-  var status;
-  var statusExplanation;
+  let status;
+  let statusExplanation;
   const minSubmitionTime = new Date(Date.now() - 60 * 15 * 1000); //ten minuts limit
   try {
     const validPendingUser = await findAndDeletePendingUser(
@@ -174,7 +188,6 @@ async function completeRegistration(req, res, next) {
       name: req.pendingUser.name,
       email: req.pendingUser.userEmail,
       hashedPassword: req.pendingUser.userHashedPassword,
-      salt: req.pendingUser.salt,
     });
 
     sendResponse(res, 200, "user has been successfully registered", null, null);
@@ -188,9 +201,17 @@ async function completeRegistration(req, res, next) {
 
 async function verifyLoginCredentials(req, res, next) {
   const { userEmail, password } = req.body;
-  let isCorrectPassword = null;
+  let registeredUser = null;
+
   try {
-    var registeredUser = await findUserByEmail(userEmail);
+    validateUserInputsFormat(password, userEmail);
+  } catch (error) {
+    sendResponse(res, 400, error.message, null, null);
+    return;
+  }
+
+  try {
+    registeredUser = await findUserByEmail(userEmail);
     if (!registeredUser) {
       sendResponse(res, 401, "wrong email", null, null);
       return;
@@ -220,7 +241,7 @@ async function hashingThePassword(unHashedPassword, salt) {
 /*****************************************************************************/
 
 function sendResponse(res, resStatus, responseExplanation, dataKey, dataValue) {
-  let responseBody = {
+  const responseBody = {
     explanation: responseExplanation,
   };
   if (dataKey) {
