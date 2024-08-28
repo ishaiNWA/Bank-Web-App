@@ -3,21 +3,28 @@ import Box from "@mui/material/Box";
 import { Typography } from "@mui/material";
 import { TransactionsTable } from "../../components/tables/TransactionsTable";
 import {
-  getTransactionsHandler,
-  getBalanceHandler,
   logOutHandler,
+  fetchTransactions,
+  fetchBalance,
   DEAFULT_TRANSACTIONS_LIMIT,
+  DEAFULT_TRANSACTIONS_OFFSET,
 } from "../../services/AccountUtils";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import { Button } from "@mui/material";
 import { MakeTransactionModal } from "../../components/Modals/Modals";
-import { GenericSubmitButton } from "../../components/buttons/buttons";
+import {
+  GenericSubmitButton,
+  TransactionTableLimitButton,
+  TransactionTableOffsetButton,
+} from "../../components/buttons/buttons";
+import Toolbar from "@mui/material/Toolbar";
 
 //export const accountUpdateContext = createContext();
 
-export function AccountPage(name, jwt) {
-  jwt =
-    "BearereyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImF2aUBnbWFpbC5jb20iLCJpYXQiOjE3MjIzNDAwOTEsImV4cCI6MTcyMjM0MzY5MX0.L_8Ro6tHPcA411V8NMx2inaLqHBTmfeflBZKBMXsC5k";
+export function AccountPage() {
+  const location = useLocation();
+
+  const { name, jwt } = location.state;
 
   const navigate = useNavigate();
 
@@ -28,6 +35,12 @@ export function AccountPage(name, jwt) {
   const [openTransactionModal, setOpenTransactionModal] = useState(false);
 
   const [accountUpdate, setAccountUpdate] = useState(false);
+  const [transactionLimit, setTransactionLimit] = useState(
+    DEAFULT_TRANSACTIONS_LIMIT
+  );
+  const [transactionOffset, setTransactionsOffset] = useState(
+    DEAFULT_TRANSACTIONS_OFFSET
+  );
 
   const notifyAccountUpdate = () => {
     console.log("notifyAccountUpdate!!!");
@@ -37,36 +50,44 @@ export function AccountPage(name, jwt) {
   const getOperationsDataObj = {
     jwt: jwt,
     navigate,
-    limit: DEAFULT_TRANSACTIONS_LIMIT,
+    limit: transactionLimit,
+    offset: transactionOffset,
   };
 
   useEffect(() => {
-    const fetchTransactions = async () => {
-      const res = await getTransactionsHandler(getOperationsDataObj);
-      console.log(res);
-      if (res.status === 200) {
-        setTransactionsArray(res.data.transactions);
-        console.log(transactionsArray);
-      }
-    };
+    fetchTransactions(getOperationsDataObj, setTransactionsArray);
+  }, [transactionLimit, transactionOffset]);
 
-    const fetchBalance = async () => {
-      const res = await getBalanceHandler(getOperationsDataObj);
-      console.log("balance is: ");
-      console.log(res.data.balance);
-      setCurrentBalance(res.data.balance);
-    };
-
-    fetchTransactions();
-    fetchBalance();
+  useEffect(() => {
+    fetchTransactions(getOperationsDataObj, setTransactionsArray);
+    fetchBalance(getOperationsDataObj, setCurrentBalance);
   }, [accountUpdate]);
 
   return (
-    //  <accountUpdateContext.Provider value={notifyAccountUpdate}>
-    <div className="h-full">
-      <h1> AccountPage </h1>
-      <div id="upper_section" className="flex justify-between w-10/12 h-3/6">
-        <div id="current_balance" className="flex justify-start w-1/3 mr-4">
+    <Box
+      id="account_page"
+      className="h-full"
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        height: "100%", // Ensure the box takes full height of its container
+      }}
+    >
+      <Toolbar sx={{ display: "flex", justifyContent: "center" }}>
+        <Typography variant="h6" noWrap component="div">
+          {`Hello ${name}`}
+        </Typography>
+      </Toolbar>
+      <Box
+        id="upper_section"
+        className="flex justify-between w-10/12 h-3/6"
+        sx={{
+          display: "flex",
+          flexDirection: "row",
+          height: "40%", // Ensure the box takes full height of its container
+        }}
+      >
+        <Box id="current_balance" className="flex justify-start w-1/3 mr-4">
           <Box
             sx={{
               padding: 3, // Adjust padding as needed
@@ -81,11 +102,9 @@ export function AccountPage(name, jwt) {
               current balance is {currentBalance}
             </Typography>
           </Box>
-        </div>
+        </Box>
 
-        <div id="make_transaction" className="flex justify-end w-1/3 ml-10">
-          <p>make transaction</p>
-
+        <Box id="make_transaction" className="flex justify-end w-1/3 ml-10">
           <Button
             onClick={() => {
               setOpenTransactionModal(true);
@@ -101,24 +120,46 @@ export function AccountPage(name, jwt) {
             navigate={navigate}
             notifyAccountUpdate={notifyAccountUpdate}
           ></MakeTransactionModal>
-        </div>
-      </div>
+        </Box>
+      </Box>
+      <Box
+        id=" lower section"
+        sx={{
+          flexGrow: 0,
+          flexShrink: 0,
+          flexBasis: "60%", // Bottom row takes 60% of the height
+        }}
+      >
+        <Box
+          id="table-select-buttons"
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "flex-start , space-around",
+            gap: 2, // Adds space between items
+            height: "50%", // Take full height of parent
+            padding: 2, // Adds padding around all items
+          }}
+        >
+          <TransactionTableLimitButton
+            setTransactionLimit={setTransactionLimit}
+          />
+          <TransactionTableOffsetButton
+            setTransactionsOffset={setTransactionsOffset}
+          />
+        </Box>
+        <Box id="transactions_table" className="flex justify-end h-3/6">
+          <TransactionsTable transactionsArray={transactionsArray} />
+        </Box>
 
-      <div id="mid_section" className="flex justify-end h-3/6">
-        <TransactionsTable transactionsArray={transactionsArray} />
-      </div>
-
-      <div id="lower_section">
-        <GenericSubmitButton
-          buttonText="Logout"
-          buttonHandler={logOutHandler}
-          submissionDataObj={getOperationsDataObj}
-        />
-      </div>
-    </div>
-
-    //  </accountUpdateContext.Provider>
+        <Box id="logout_button">
+          <GenericSubmitButton
+            buttonText="Logout"
+            buttonHandler={logOutHandler}
+            submissionDataObj={getOperationsDataObj}
+          />
+        </Box>
+      </Box>
+    </Box>
   );
 }
-
-//export const useUpdateAccountContext= ()=>useContext(accountUpdateContext);

@@ -29,6 +29,7 @@ export async function sendRequest(method, URL, data, jwt, params) {
     });
     return res;
   } catch (error) {
+    console.log("ERROR IS: ");
     console.log(error);
     return error.response;
   }

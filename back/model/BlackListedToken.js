@@ -10,7 +10,6 @@ const blackListedTokensSchema = new Schema({
   createdAt: {
     type: Date,
     default: Date.now,
-    expires: 3600, // 3600 seconds = 1 hour
     expires: parseInt(process.env.BLACK_LISTED_TOKEN_EXPIRATION_SECONDS),
   },
 });

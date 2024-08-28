@@ -109,7 +109,7 @@ async function isBlackListedToken(token) {
 
 /*****************************************************************************/
 
-async function findUsersTransactions(email, offset, limit) {
+async function findUsersTransactions(email, offset, limit = null) {
   const userObj = await User.findOne({ email: email })
     .select("recentTransactions")
     .populate({

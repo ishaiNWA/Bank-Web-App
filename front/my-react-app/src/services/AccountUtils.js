@@ -25,6 +25,7 @@ const GENERAL_ERROR_MSG = "error has occured. please try to login again.";
 const SUCCESSFUL_LOGOUT_MSG = "you are now logged out. Goodby!";
 
 export const DEAFULT_TRANSACTIONS_LIMIT = 10;
+export const DEAFULT_TRANSACTIONS_OFFSET = 0;
 
 // export function loadAccountHandler(jwt){
 
@@ -34,10 +35,11 @@ export const DEAFULT_TRANSACTIONS_LIMIT = 10;
 // }
 
 export async function getTransactionsHandler(getTransactionDataObj) {
-  const { jwt, navigate, limit } = getTransactionDataObj;
+  const { jwt, navigate, limit, offset } = getTransactionDataObj;
 
   const param = {
     limit: limit,
+    offset: offset,
   };
 
   const res = await sendRequest("GET", TRANSACTIONS_URL, null, jwt, param);
@@ -152,3 +154,19 @@ export async function logOutHandler(logOutDataObj) {
 
   navigate("/auth");
 }
+
+export const fetchTransactions = async (
+  getOperationsDataObj,
+  setTransactionsArray
+) => {
+  const res = await getTransactionsHandler(getOperationsDataObj);
+
+  if (res.status === 200) {
+    setTransactionsArray(res.data.transactions);
+  }
+};
+
+export const fetchBalance = async (getOperationsDataObj, setCurrentBalance) => {
+  const res = await getBalanceHandler(getOperationsDataObj);
+  setCurrentBalance(res.data.balance);
+};

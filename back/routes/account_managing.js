@@ -19,6 +19,7 @@ router.post(
 router.get(
   "/transactions",
   jwtController.verifyJWT,
+  accountManagingContoller.validatePaginationParams,
   accountManagingContoller.getTransactions,
 );
 

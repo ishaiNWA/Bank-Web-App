@@ -3,16 +3,29 @@
 @tailwind utilities;
 
 @layer utilities {
-    .input {
-      @apply w-[100%] p-4 border-[1px] border-gray-400 rounded-md hover:border-black ;
-    }
-
-    .submitButton {
-      @apply bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 my-4 rounded-full;
-    }
-
+  .input {
+    @apply w-[100%] p-4 border-[1px] border-gray-400 rounded-md hover:border-black;
   }
 
+  .submitButton {
+    @apply bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 my-4 rounded-full;
+  }
+}
 
-
-  
+/* .select {
+    '&.MuiOutlinedInput-root': {
+      '& fieldset': {
+        border: 'none',
+      },
+    },
+    '&.MuiInputBase-root': {
+      padding: 0,
+    },
+    '& .MuiSelect-select': {
+      paddingRight: '24px !important',
+    },
+  },
+  selectValue: {
+    fontWeight: 'bold',
+  },
+})); */

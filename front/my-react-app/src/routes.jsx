@@ -19,7 +19,7 @@ export function App() {
           {/* This route is for home component 
           with exact path "/", in component props 
           we passes the imported component*/}
-          <Route path="/" element={<StatusPage />} />
+          <Route path="/" element={<AuthPage />} />
 
           <Route path="/account" element={<AccountPage />} />
 

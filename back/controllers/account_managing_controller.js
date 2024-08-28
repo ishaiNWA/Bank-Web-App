@@ -26,23 +26,56 @@ async function getBalance(req, res, next) {
 }
 
 /*****************************************************************************/
-
-async function getTransactions(req, res, next) {
-  const limit =
-    req.query.limit === undefined || req.query.limit === ""
-      ? 10
-      : req.query.limit;
-  const offset =
-    req.query.offset === undefined || req.query.offset === ""
-      ? 0
-      : req.query.offset;
+function validatePaginationParams(req, res, next) {
+  let { limit, offset } = req.query;
+  limit = limit === undefined || limit === "" ? 10 : limit;
+  offset = offset === undefined || offset === "" ? 0 : offset;
 
   try {
-    validatePaginationParams(limit, offset);
+    if (limit === "All") {
+      limit = null;
+    } else {
+      if (
+        !Number.isInteger(Number(limit)) ||
+        !Number.isInteger(Number(offset))
+      ) {
+        throw new Error("Query parameters must be integers");
+      }
+    }
+    if (limit !== null && limit < 1) {
+      throw new Error(
+        "invalid query parameters: limit must be positive number",
+      );
+    }
+    if (offset < 0) {
+      throw new Error("invalid query parameters: offset must be non-negative");
+    }
   } catch (error) {
     return sendResponse(res, 400, error.message, null, null);
   }
+  req.locals = req.locals || {};
+  req.locals.pagination = { offset, limit };
+  next();
+}
 
+/*****************************************************************************/
+async function getTransactions(req, res, next) {
+  // const limit =
+  //   req.query.limit === undefined || req.query.limit === ""
+  //     ? 10
+  //     : req.query.limit;
+  // const offset =
+  //   req.query.offset === undefined || req.query.offset === ""
+  //     ? 0
+  //     : req.query.offset;
+
+  // try {
+  //   validatePaginationParams(limit, offset);
+  // } catch (error) {
+  //   return sendResponse(res, 400, error.message, null, null);
+  // }
+
+  const { offset, limit } = req.locals.pagination;
   let transactions = null;
 
   try {
@@ -62,16 +95,20 @@ async function getTransactions(req, res, next) {
 
 /*****************************************************************************/
 
-function validatePaginationParams(limit, offset) {
-  if (!Number.isInteger(Number(limit)) || !Number.isInteger(Number(offset))) {
-    throw new Error("Query parameters must be integers");
-  }
-  if (limit < 1 || offset < 0) {
-    throw new Error(
-      "invalid query parameters: limit must be positive and offset must be non-negative",
-    );
-  }
-}
+// function validatePaginationParams(limit, offset) {
+//   if (limit === "All") {
+//     limit = null;
+//   } else {
+//     if (!Number.isInteger(Number(limit)) || !Number.isInteger(Number(offset))) {
+//       throw new Error("Query parameters must be integers");
+//     }
+//   }
+//   if (limit < 1 || offset < 0) {
+//     throw new Error(
+//       "invalid query parameters: limit must be positive and offset must be non-negative",
+//     );
+//   }
+// }
 
 /*****************************************************************************/
 
@@ -174,4 +211,9 @@ function sendResponse(res, resStatus, responseExplanation, dataKey, dataValue) {
 
 /*****************************************************************************/
 
-module.exports = { getBalance, getTransactions, performTransaction };
+module.exports = {
+  getBalance,
+  validatePaginationParams,
+  getTransactions,
+  performTransaction,
+};

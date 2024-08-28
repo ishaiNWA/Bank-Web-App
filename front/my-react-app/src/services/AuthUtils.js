@@ -1,10 +1,8 @@
-
-
 import {
   sendRequest,
   REGISTER_URL,
   REGISTER_CONFIRMATION_URL,
-  LOGIN_URL
+  LOGIN_URL,
 } from "./ApiUtils";
 
 import {
@@ -12,7 +10,7 @@ import {
   isValidPassword,
   isMatchingPasswords,
   isValidEmailAddress,
-}from "./inputValidationUtils";
+} from "./inputValidationUtils";
 
 const INVALID_PASSWORD_MSG = `
       Your password must meet the following criteria:
@@ -25,17 +23,20 @@ const INVALID_PASSWORD_MSG = `
       `;
 
 export const registerHandler = async (registerDataObj) => {
-
   const { method, registerCredentials, setOpenModel } = registerDataObj;
 
   var inValidationMessage = isValidRegisterCredentials(registerCredentials);
   if (inValidationMessage) {
     alert(inValidationMessage);
-
   } else {
-
     const requestBody = BuildRequestBody(registerCredentials);
-    const res = await sendRequest(method, REGISTER_URL, requestBody ,null ,null);
+    const res = await sendRequest(
+      method,
+      REGISTER_URL,
+      requestBody,
+      null,
+      null
+    );
 
     alert(res.data.explanation);
     if (res.status === 200) {
@@ -43,65 +44,66 @@ export const registerHandler = async (registerDataObj) => {
       setOpenModel(true);
     } else {
       console.log("fail");
-
     }
   }
-}
+};
 
 function BuildRequestBody(registerCredentials) {
-
-  return ({
+  return {
     name: null != registerCredentials.name ? registerCredentials.name : null,
     userEmail: registerCredentials.email,
-    password: registerCredentials.password
-  })
+    password: registerCredentials.password,
+  };
 }
 
 function isValidRegisterCredentials(registerCredentials) {
-
   if (!isValidName(registerCredentials.name)) {
-
-    return "name should be 1-20 only upper/lower case letters"
+    return "name should be 1-20 only upper/lower case letters";
   }
 
   if (!isValidEmailAddress(registerCredentials.email)) {
-
     return "invalid email address";
   }
 
   if (!isValidPassword(registerCredentials.password)) {
-
     return INVALID_PASSWORD_MSG;
   }
 
-  if (!isMatchingPasswords(registerCredentials.password, registerCredentials.passwordConfirmation)) {
-
-    return 'confirm your password again';
+  if (
+    !isMatchingPasswords(
+      registerCredentials.password,
+      registerCredentials.passwordConfirmation
+    )
+  ) {
+    return "confirm your password again";
   }
 
   return null;
-
 }
 
-
 export const confirmationHandler = async (confirmationHandlerDataObj) => {
-
-  const { method, confirmationPassword, registerEmail, password, navigate } = confirmationHandlerDataObj;
+  const { method, confirmationPassword, registerEmail, password, navigate } =
+    confirmationHandlerDataObj;
 
   const requestBody = {
-    confirmationPassword: confirmationPassword
+    confirmationPassword: confirmationPassword,
   };
 
-  const res = await sendRequest(method, REGISTER_CONFIRMATION_URL, requestBody ,null ,null);
+  const res = await sendRequest(
+    method,
+    REGISTER_CONFIRMATION_URL,
+    requestBody,
+    null,
+    null
+  );
 
   if (res.status === 200) {
     console.log("success");
     LoginHandler({ userEmail: registerEmail, password, navigate });
   }
-}
+};
 
 export const LoginHandler = async (loginDataObj) => {
-
   const { userEmail, password, navigate } = loginDataObj;
 
   console.log(loginDataObj);
@@ -116,23 +118,20 @@ export const LoginHandler = async (loginDataObj) => {
 
   const registerCredentials = {
     email: userEmail,
-    password: password
+    password: password,
   };
 
   const requestBody = BuildRequestBody(registerCredentials);
 
-  const res = await sendRequest("POST", LOGIN_URL, requestBody ,null ,null);
+  const res = await sendRequest("POST", LOGIN_URL, requestBody, null, null);
 
   alert(res.data.explanation);
   if (res.status === 200) {
     alert("REFER TO ACCOUNT PAGE!");
     const { name, Authorization } = res.data.resBodyData;
-    console.log("res resBodyData is");
-    console.log(res.data.resBodyData.name);
-    console.log(res.data.resBodyData.Authorization);
-    navigate("/account", { name, Authorization });
+    console.log("Authorization is :" + Authorization);
+    navigate("/account", { state: { name: name, jwt: Authorization } }); // pass data to another rout as a state
 
+    // navigate("/account", { name, Authorization });
   }
-
 };
-
