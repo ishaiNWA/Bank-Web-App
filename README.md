@@ -49,6 +49,7 @@ Secure login and registration system
 4)Security Implementation
  -Secure password storage using industry-standard hashing algorithms
 
+
 **Future Enhancements**
-  -Publishing REST API documentation using Swagger
-  -Adding admin role and functionalities
+  1)Publishing REST API documentation using Swagger
+  2)Adding admin role and functionalities
