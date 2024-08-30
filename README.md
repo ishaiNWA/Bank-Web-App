@@ -14,9 +14,11 @@ Authentication: JSON Web Tokens (JWT)
 **Key Features**
 
 1) User Authentication
--Secure login and registration system
--Email confirmation for new accounts
 
+-Secure login and registration system
+
+
+-Email confirmation for new accounts
 
 2) User Authorization
 - JWT-based authorization for protected private resource access
