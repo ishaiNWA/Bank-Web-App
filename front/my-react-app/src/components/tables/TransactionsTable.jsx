@@ -8,19 +8,8 @@ import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import TablePagination from "@mui/material/TablePagination";
 import Paper from "@mui/material/Paper";
-
-import FormControl from "@mui/material/FormControl";
-import InputLabel from "@mui/material/InputLabel";
-
-import { GenericSubmitButton } from "../../components/buttons/buttons";
-import {
-  Box,
-  Select,
-  MenuItem,
-  Typography,
-  TextField,
-  Button,
-} from "@mui/material";
+import { Box } from "@mui/material";
+import "../../styles.css";
 
 const useStyles = makeStyles({
   table: {
@@ -29,6 +18,8 @@ const useStyles = makeStyles({
 });
 
 const DEFAULT_ROWS_PER_PAGE = 5;
+
+/*****************************************************************************/
 
 export function TransactionsTable({ transactionsArray }) {
   const classes = useStyles();
@@ -46,7 +37,6 @@ export function TransactionsTable({ transactionsArray }) {
   };
 
   const handleChangeRowsPerPage = (event) => {
-    console.log("handleChangeRowsPerPage!!!!!!!!");
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
@@ -54,13 +44,21 @@ export function TransactionsTable({ transactionsArray }) {
   return (
     <TableContainer component={Paper}>
       <Table className={classes.table} aria-label="simple table">
-        <TableHead>
+        <TableHead className="tableHead">
           <TableRow>
-            <TableCell>Transactions </TableCell>
-            <TableCell align="right">from</TableCell>
-            <TableCell align="right">to</TableCell>
-            <TableCell align="right">amount</TableCell>
-            <TableCell align="right">Date</TableCell>
+            <TableCell className="tableHeadCell">Transactions </TableCell>
+            <TableCell className="tableHeadCell" align="right">
+              From
+            </TableCell>
+            <TableCell className="tableHeadCell" align="right">
+              To
+            </TableCell>
+            <TableCell className="tableHeadCell" align="right">
+              Amount
+            </TableCell>
+            <TableCell className="tableHeadCell" align="right">
+              Date
+            </TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -74,7 +72,15 @@ export function TransactionsTable({ transactionsArray }) {
                 <TableCell align="right">{row.senderEmail}</TableCell>
                 <TableCell align="right">{row.recipientEmail}</TableCell>
                 <TableCell align="right">{row.amount}</TableCell>
-                <TableCell align="right">{row.date}</TableCell>
+                <TableCell align="right">
+                  {new Date(row.date).toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </TableCell>
               </TableRow>
             ))}
           {emptyRows > 0 && (
@@ -105,50 +111,7 @@ export function TransactionsTable({ transactionsArray }) {
             onRowsPerPageChange={handleChangeRowsPerPage}
           />
         </Box>
-
-        {/* <Box id="transaction-skip-control" display="flex">
-          <Typography variant="body1" mr={1}>
-            Number of transactions to skip:
-          </Typography>
-          <TextField
-            type="number"
-            value={5}
-            onChange={5}
-            size="small"
-            inputProps={{ min: 1 }}
-            sx={{ width: "80px" }}
-          />
-          <Button variant="contained" onClick={5} size="small">
-            Set
-          </Button>
-        </Box> */}
       </Box>
     </TableContainer>
   );
-}
-
-{
-  /* <Box
-id="transaction-limit-control"
-display="flex"
-width="200px" // Adjust this width as needed
-mt={2} // Add some top margin
->
-<FormControl fullWidth size="small">
-  <InputLabel id="transaction-limit-label">
-    transactions limit to
-  </InputLabel>
-  <Select
-    labelId="transaction-limit-label"
-    value={5}
-    onChange={5}
-    label="limit transactions displayed to"
-  >
-    <MenuItem value={10}>10</MenuItem>
-    <MenuItem value={50}>50</MenuItem>
-    <MenuItem value={100}>100</MenuItem>
-    <MenuItem value={500}>500</MenuItem>
-  </Select>
-</FormControl>
-</Box> */
 }

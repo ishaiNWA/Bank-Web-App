@@ -1,13 +1,8 @@
-//import { Button } from "@react-email/components";
-import {
-  Box,
-  Select,
-  MenuItem,
-  Typography,
-  TextField,
-  Button,
-} from "@mui/material";
+import { Box, Select, MenuItem, TextField, Button } from "@mui/material";
 import { useState } from "react";
+import "../../styles.css";
+
+/*****************************************************************************/
 
 export function GenericSubmitButton({
   buttonText,
@@ -24,6 +19,32 @@ export function GenericSubmitButton({
     </button>
   );
 }
+
+/*****************************************************************************/
+
+export function MakeTransactionButton({ setOpenTransactionModal }) {
+  return (
+    <Button
+      variant="contained"
+      size="large"
+      onClick={() => setOpenTransactionModal(true)}
+      sx={{
+        fontSize: "1.2rem",
+        padding: "25px 35px",
+        fontWeight: "bold",
+        backgroundColor: "#3f51b5", // Indigo color
+        color: "white",
+        "&:hover": {
+          backgroundColor: "#303f9f", // Darker shade of indigo on hover
+        },
+      }}
+    >
+      Make Transaction
+    </Button>
+  );
+}
+
+/*****************************************************************************/
 
 export function TransactionButton({
   buttonText,
@@ -45,6 +66,7 @@ export function TransactionButton({
 
 export function TransactionTableLimitButton({ setTransactionLimit }) {
   const [selectedLimit, setSelectedLimit] = useState(10);
+
   const handleSelectedLimitChange = (event) => {
     setSelectedLimit(event.target.value);
   };
@@ -54,32 +76,48 @@ export function TransactionTableLimitButton({ setTransactionLimit }) {
   };
 
   return (
-    <Box id="transaction-limit-control" display="flex">
-      <Typography variant="body1" mr={1}>
-        limit transactios to:
-      </Typography>
-      <Select value={selectedLimit} onChange={handleSelectedLimitChange}>
+    <Box
+      id="transaction-limit-control"
+      display="flex"
+      alignItems="center"
+      gap={2}
+    >
+      <Select
+        value={selectedLimit}
+        onChange={handleSelectedLimitChange}
+        size="small"
+        sx={{
+          width: "120px",
+          height: "40px",
+        }}
+      >
         <MenuItem value={10}>10</MenuItem>
         <MenuItem value={50}>50</MenuItem>
         <MenuItem value={100}>100</MenuItem>
-        <MenuItem value={"All"}>"All"</MenuItem>
+        <MenuItem value="All">All</MenuItem>
       </Select>
-      <Button variant="contained" onClick={setNewLimit} size="small">
-        Set limit
+      <Button
+        variant="contained"
+        onClick={setNewLimit}
+        size="small"
+        className="common-button"
+      >
+        Set Limit
       </Button>
     </Box>
   );
 }
+
 /*****************************************************************************/
 
 export function TransactionTableOffsetButton({ setTransactionsOffset }) {
-  const [enteredOffsetValue, SetEnteredOffsetValue] = useState(0);
+  const [enteredOffsetValue, setEnteredOffsetValue] = useState(0);
   const [error, setError] = useState(false);
 
   const handleOffsetChange = (event) => {
     const value = event.target.value;
     if (value === "" || (/^\d+$/.test(value) && parseInt(value) >= 0)) {
-      SetEnteredOffsetValue(value);
+      setEnteredOffsetValue(value);
       setError(false);
     } else {
       setError(true);
@@ -92,14 +130,13 @@ export function TransactionTableOffsetButton({ setTransactionsOffset }) {
 
   return (
     <Box
-      id="transaction-limit-control"
+      id="transaction-offset-control"
       sx={{
         display: "flex",
         alignItems: "center",
         gap: 2,
       }}
     >
-      <Typography variant="body1">Number of transactions to skip:</Typography>
       <TextField
         value={enteredOffsetValue}
         onChange={handleOffsetChange}
@@ -108,18 +145,22 @@ export function TransactionTableOffsetButton({ setTransactionsOffset }) {
         type="number"
         size="small"
         inputProps={{ min: 0 }}
-        sx={{ width: "100px" }}
+        sx={{
+          width: "120px",
+          "& .MuiInputBase-root": {
+            height: "40px",
+          },
+        }}
       />
       <Button
         variant="contained"
         onClick={setNewOffset}
         size="small"
         disabled={enteredOffsetValue === "" || error}
+        className="common-button"
       >
-        Set
+        Set Offset
       </Button>
     </Box>
   );
 }
-
-//export function TransactionTableSelectButton()

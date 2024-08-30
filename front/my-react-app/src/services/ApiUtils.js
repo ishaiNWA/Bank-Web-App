@@ -1,31 +1,44 @@
 import axios from "axios";
 
-export const REGISTER_URL = "http://127.0.1.1:3000/api/connection/register";
+// API Endpoints
+
+export const REGISTER_URL = process.env.REACT_APP_REGISTER_URL;
 export const REGISTER_CONFIRMATION_URL =
-  "http://127.0.1.1:3000/api/connection/register-confirmation";
-export const LOGIN_URL = "http://127.0.0.1:3000/api/connection/login";
-export const TRANSACTIONS_URL =
-  "http://127.0.0.1:3000/api/account_managing/transactions";
-export const MAKE_TRANSACTION_URL =
-  "http://127.0.0.1:3000/api/account_managing/transaction";
-export const GET_BALANCE_URL =
-  "http://127.0.0.1:3000/api/account_managing/balance";
-export const LOGOUT_URL = "http://127.0.0.1:3000/api/connection/logout";
+  process.env.REACT_APP_REGISTER_CONFIRMATION_URL;
+export const LOGIN_URL = process.env.REACT_APP_LOGIN_URL;
+export const TRANSACTIONS_URL = process.env.REACT_APP_TRANSACTIONS_URL;
+export const MAKE_TRANSACTION_URL = process.env.REACT_APP_MAKE_TRANSACTION_URL;
+export const GET_BALANCE_URL = process.env.REACT_APP_GET_BALANCE_URL;
+export const LOGOUT_URL = process.env.REACT_APP_LOGOUT_URL;
 
-export async function sendRequest(method, URL, data, jwt, params) {
-  console.log("URL is");
-  console.log(URL);
+/*****************************************************************************/
 
-  var res;
+/**
+ * Sends an HTTP request using axios
+ * @param {string} method -  HTTP method (GET, POST, PUT, DELETE, etc.)
+ * @param {string} url -  URL to send the request to
+ * @param {object} [data=null] -  data to send in the request body
+ * @param {string} [jwt=null] -  JWT token for authentication
+ * @param {object} [params=null] -  URL parameters
+ * @returns {Promise} -  axios response or error object
+ */
+
+export async function sendRequest(
+  method,
+  url,
+  data = null,
+  jwt = null,
+  params = null
+) {
   try {
-    res = await axios({
+    const res = await axios({
       method: method.toLowerCase(),
-      url: URL,
+      url,
       data: method === "GET" ? null : data,
       headers: {
-        Authorization: jwt ? jwt : null,
+        Authorization: jwt,
       },
-      params: params ? params : null,
+      params: params,
     });
     return res;
   } catch (error) {

@@ -1,76 +1,106 @@
-
-import { makeTransactionHandler } from "../../services/AccountUtils";
-import { useState } from "react";
-import { useContext } from "react";
+import React, { useState } from "react";
 import { useNavigateContext } from "../../pages/AuthenticationPage/AuthPage";
-import Modal from '@mui/material/Modal';
-import { GenericAuthForm } from "../forms/form";
-import { GenericSubmitButton } from "../buttons/buttons";
-import { confirmationHandler } from "../../services/AuthUtils"
-import Box from '@mui/material/Box';
-import { Button } from '@mui/material';
-
-import { Typography } from '@mui/material';
+import { makeTransactionHandler } from "../../services/AccountUtils";
+import { confirmationHandler } from "../../services/AuthUtils";
 import { GenericForm } from "../forms/form";
+import { GenericSubmitButton } from "../buttons/buttons";
+import { Modal, Box, Typography } from "@mui/material";
+import "../../styles.css";
 
-export function RegisterModal({ openModel, setOpenModel, registerEmail, password }) {
+/*****************************************************************************/
 
+export function RegisterModal({
+  openModel,
+  setOpenModel,
+  registerEmail,
+  password,
+}) {
   const [confirmationPassword, setConfirmationPassword] = useState("");
   const navigate = useNavigateContext();
-
 
   const confirmationHandlerDataObj = {
     method: "POST",
     confirmationPassword: confirmationPassword,
     registerEmail: registerEmail,
     password: password,
-    navigate: navigate
+    navigate: navigate,
   };
 
-  console.log("Data1:");
-  console.log(confirmationHandlerDataObj);
-
   return (
-
     <Modal open={openModel}>
-      <div>
-        <GenericAuthForm
-          credential={confirmationPassword}
-          credentialName="confirmation password"
-          setCredential={setConfirmationPassword}
-        />
+      <Box className="modal-layout">
+        <Typography
+          variant="h5"
+          component="h2"
+          sx={{
+            textAlign: "center",
+            mb: 4,
+            color: "#333",
+            fontWeight: "bold",
+          }}
+        >
+          Enter Confirmation Code
+        </Typography>
 
-        <GenericSubmitButton
-          buttonText="confirm registration"
-          buttonHandler={confirmationHandler}
-          submissionDataObj={confirmationHandlerDataObj}
-        />
-        <GenericSubmitButton
-          buttonText="close"
-          buttonHandler={setOpenModel}
-          submissionDataObj={false}
-        />
+        <Box
+          sx={{
+            width: "100%",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            flex: 1,
+          }}
+        >
+          <GenericForm
+            inputValue={confirmationPassword}
+            inputName="confirmation password"
+            setInputValue={setConfirmationPassword}
+          />
+        </Box>
 
-      </div>
-
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            gap: 2,
+            mt: 4,
+          }}
+        >
+          <GenericSubmitButton
+            buttonText="Confirm Registration"
+            buttonHandler={confirmationHandler}
+            submissionDataObj={confirmationHandlerDataObj}
+          />
+          <GenericSubmitButton
+            buttonText="Close"
+            buttonHandler={setOpenModel}
+            submissionDataObj={false}
+          />
+        </Box>
+      </Box>
     </Modal>
   );
-
 }
 
+/*****************************************************************************/
 
-export function MakeTransactionModal({ openTransactionModal, setOpenTransactionModal, jwt , navigate ,notifyAccountUpdate}) {
-
+export function MakeTransactionModal({
+  openTransactionModal,
+  setOpenTransactionModal,
+  jwt,
+  navigate,
+  notifyAccountUpdate,
+}) {
   const [recipientEmail, setRecipientEmail] = useState("");
   const [amount, setAmount] = useState(0);
 
-
-  const makeTransactionDataObj={
+  const makeTransactionDataObj = {
     jwt: jwt,
     navigate: navigate,
-    recipientEmail : recipientEmail,
-    amount : amount,
-    notifyAccountUpdate : notifyAccountUpdate
+    recipientEmail: recipientEmail,
+    amount: amount,
+    notifyAccountUpdate: notifyAccountUpdate,
   };
 
   return (
@@ -80,9 +110,31 @@ export function MakeTransactionModal({ openTransactionModal, setOpenTransactionM
       aria-labelledby="modal-modal-title"
       aria-describedby="modal-modal-description"
     >
-      <Box >
-        <Typography id="modal-modal-description" sx={{ mt: 2 }}>
-          Duis mollis, est non commodo luctus, nisi erat porttitor ligula.
+      <Box className="modal-layout">
+        <Typography
+          id="modal-modal-title"
+          variant="h5"
+          component="h2"
+          sx={{
+            textAlign: "center",
+            mb: 4,
+            color: "#333",
+            fontWeight: "bold",
+          }}
+        >
+          Enter Transaction Details
+        </Typography>
+        <Box
+          sx={{
+            width: "100%",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 3,
+            flex: 1,
+          }}
+        >
           <GenericForm
             inputValue={amount}
             inputName="amount"
@@ -93,7 +145,15 @@ export function MakeTransactionModal({ openTransactionModal, setOpenTransactionM
             inputName="recipientEmail"
             setInputValue={setRecipientEmail}
           />
-
+        </Box>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            gap: 2,
+            mt: 4,
+          }}
+        >
           <GenericSubmitButton
             buttonText="submit transaction"
             buttonHandler={makeTransactionHandler}
@@ -104,8 +164,7 @@ export function MakeTransactionModal({ openTransactionModal, setOpenTransactionM
             buttonHandler={setOpenTransactionModal}
             submissionDataObj={false}
           />
-
-        </Typography>
+        </Box>
       </Box>
     </Modal>
   );

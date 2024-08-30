@@ -1,102 +1,78 @@
-
-
-import { GenericAuthForm } from "../../components/forms/form";
+import React, { useState } from "react";
+import { GenericForm } from "../../components/forms/form";
 import { GenericSubmitButton } from "../../components/buttons/buttons";
-import { useState } from "react";
 import { useNavigateContext } from "../../pages/AuthenticationPage/AuthPage";
-import { LoginHandler } from "../../services/AuthUtils";
+import { loginHandler } from "../../services/AuthUtils";
+import { Avatar, Box, Container, CssBaseline, Typography } from "@mui/material";
+import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
+import "../../styles.css";
 
-import * as React from 'react';
-import Avatar from '@mui/material/Avatar';
-import Button from '@mui/material/Button';
-import CssBaseline from '@mui/material/CssBaseline';
-import TextField from '@mui/material/TextField';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Checkbox from '@mui/material/Checkbox';
-import Link from '@mui/material/Link';
-import Grid from '@mui/material/Grid';
-import Box from '@mui/material/Box';
-import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-import Typography from '@mui/material/Typography';
-import Container from '@mui/material/Container';
-import { ThemeProvider } from '@mui/material/styles';
-
-
-
+/*****************************************************************************/
 
 export function Login() {
-
   const [loginEmail, setLoginEmail] = useState("");
   const [password, setPassword] = useState("");
-  const navigate = useNavigateContext()
+  const navigate = useNavigateContext();
   const loginDataObj = {
     method: "POST",
     userEmail: loginEmail,
     password: password,
-    navigate: navigate
-  }
+    navigate: navigate,
+  };
+
+  const formArray = [
+    {
+      inputValue: loginEmail,
+      inputName: "Login Email",
+      setInputValue: setLoginEmail,
+    },
+    {
+      inputValue: password,
+      inputName: "Login Password",
+      setInputValue: setPassword,
+    },
+  ];
 
   return (
+    <Container component="main" maxWidth="xs">
+      <CssBaseline />
+      <Box className="auth-inputs-layout">
+        <Avatar sx={{ m: 1, bgcolor: "secondary.main" }}>
+          <LockOutlinedIcon />
+        </Avatar>
+        <Typography component="h1" variant="h5">
+          Login
+        </Typography>
 
-    <header>
-
-      <Container component="main" maxWidth="xs">
-        <CssBaseline />
         <Box
-          sx={{
-            marginTop: 8,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-          }}
+          className="flex flex-col h-full"
+          component="form"
+          noValidate
+          sx={{ mt: 1 }}
         >
-          <Avatar sx={{ m: 1, bgcolor: 'secondary.main' }}>
-            <LockOutlinedIcon />
-          </Avatar>
-          <Typography component="h1" variant="h5">
-            Login
-          </Typography>
-
-
-          <Box className="flex flex-col h-full" component="form"  noValidate sx={{ mt: 1 }}>
-
-            <div id="auth section"  className="h-2/3">
-              <ul className="flex flex-col gap-4 ">
-                <li>
-                  <GenericAuthForm
-                    credential={loginEmail}
-                    credentialName="Login Email"
-                    setCredential={setLoginEmail}
+          <Box id="auth section" className="h-2/3">
+            <ul className="flex flex-col gap-4 ">
+              {formArray.map((formElement, index) => (
+                <li key={index}>
+                  <GenericForm
+                    inputValue={formElement.inputValue}
+                    inputName={formElement.inputName}
+                    setInputValue={formElement.setInputValue}
                   />
                 </li>
+              ))}
+            </ul>
+          </Box>
 
-                <li>
-                  <GenericAuthForm
-                    credential={password}
-                    credentialName="Login Password"
-                    setCredential={setPassword}
-                  />
-                </li>
-              </ul>
-
-            </div>
-
-            <div id="submit button section"  className="h-1/3">
-              <GenericSubmitButton
-                buttonText="Login"
-                buttonHandler={LoginHandler}
-                submissionDataObj={loginDataObj}
-              />
-
-            </div>
-
+          <Box id="submit button section" className="h-1/3">
+            <GenericSubmitButton
+              buttonText="Login"
+              buttonHandler={loginHandler}
+              submissionDataObj={loginDataObj}
+            />
           </Box>
         </Box>
-
-      </Container>
-
-    </header>
-
-
+      </Box>
+    </Container>
   );
 }

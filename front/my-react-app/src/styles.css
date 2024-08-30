@@ -12,20 +12,114 @@
   }
 }
 
-/* .select {
-    '&.MuiOutlinedInput-root': {
-      '& fieldset': {
-        border: 'none',
-      },
-    },
-    '&.MuiInputBase-root': {
-      padding: 0,
-    },
-    '& .MuiSelect-select': {
-      paddingRight: '24px !important',
-    },
-  },
-  selectValue: {
-    fontWeight: 'bold',
-  },
-})); */
+.page-layout {
+  display: "flex";
+  flexdirection: "column";
+
+  height: "100%";
+  backgroundcolor: "#f5f5f5"; /* Light gray background */
+}
+
+.auth-inputs-layout {
+  margin-top: 64px;
+  display: "flex";
+  flexdirection: "column";
+  alignitems: "center";
+}
+
+.common-button {
+  width: 120px;
+  height: 40px;
+}
+
+/* Styles for the Select component */
+.transaction-select {
+  width: 120px;
+  height: 40px;
+}
+.common-inputStyle {
+  width: "120px";
+  height: "40px";
+}
+
+.modal-layout {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 600px;
+  height: 450px;
+  background-color: #f5f5f5; /* Light grey background */
+  box-shadow: 0px 0px 24px rgba(0, 0, 0, 0.15);
+  padding: 32px;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: auto;
+}
+
+.account-page-upper-section {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: center;
+  height: 40%;
+  margin-bottom: 32px; /* 4 * 8px, assuming default MUI theme spacing */
+  margin-left: auto;
+  margin-right: auto;
+  width: 90%;
+  gap: 72px; /* 9 * 8px, assuming default MUI theme spacing */
+  padding-top: 32px; /* 4 * 8px, assuming default MUI theme spacing */
+}
+
+.account-page-lower-section {
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-basis: 60%;
+  width: 90%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.current-balance {
+  padding: 40px; /* 5 * 8px (default MUI spacing) */
+  border: 2px solid blue;
+  background-color: #c3d0cdb6;
+  color: black;
+  border-radius: 32px; /* 4 * 8px (default MUI spacing) */
+  display: inline-block;
+  min-width: 200px; /* Ensure a minimum width */
+}
+
+.make-transaction-button {
+  font-size: 1.2rem;
+  padding: 25px 35px;
+  font-weight: bold;
+  background-color: #3f51b5;
+  color: white;
+  transition: background-color 0.3s ease;
+}
+
+.make-transaction-button:hover {
+  background-color: #303f9f;
+}
+
+.tableHead {
+  background-color: #d1dcdab6;
+}
+
+.tableHeadCell {
+  color: #000000; /* Changed to black for better visibility on light background */
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+.table-select-buttons-layout {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px; /* 2 * 8px, assuming the default theme uses 8px as the base unit */
+  padding: 16px;
+  margin-bottom: 16px;
+}

@@ -1,52 +1,21 @@
+import { Box } from "@mui/material";
 
-
-function FormHandler(e, setFunction) {
+export function GenericForm({ inputValue, inputName, setInputValue }) {
+  const formHandler = (e, setFunction) => {
     setFunction(e.target.value);
-  }
- 
-  
- export function GenericAuthForm({credential, credentialName , setCredential}){
-  
-      return (
-          <div>
-            <form >
-                <input
-               className="input" 
-                  type="text"
-                  placeholder={credentialName}
-                  value={credential}
-                  onChange={(e) => FormHandler(e, setCredential)}
-                />
-            </form>
-          </div>
-        );
-  }
+  };
 
-
-
-  export function GenericForm({ inputValue, inputName, setInputValue}) {
-
-    const handleChange = (e) => {
-      setInputValue(e.target.value);
-    };
-  
-    return (
-      <div>
-        <form>
-          <input
-            className="input"
-            type="text"
-            placeholder={inputName}
-            value={inputValue}
-            onChange={(e) => FormHandler(e, setInputValue)}
-          />
-        </form>
-      </div>
-    );
-  }
-
-
-
-
-
-
+  return (
+    <Box>
+      <form>
+        <input
+          className="input"
+          type="text"
+          placeholder={inputName}
+          value={inputValue}
+          onChange={(e) => formHandler(e, setInputValue)}
+        />
+      </form>
+    </Box>
+  );
+}
