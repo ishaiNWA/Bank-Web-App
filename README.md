@@ -14,8 +14,8 @@ Authentication: JSON Web Tokens (JWT)
 **Key Features**
 
 1) User Authentication
-Secure login and registration system
- -Email confirmation for new accounts
+-Secure login and registration system
+-Email confirmation for new accounts
 
 
 2) User Authorization
@@ -35,21 +35,22 @@ Secure login and registration system
 **Technical Highlights**
 
 1)RESTful API Design 
- -Well-structured endpoints for various banking operations
+-Well-structured endpoints for various banking operations
 
 2)Express.js Routing
- -Organized route handling for logically different functionalities
- -Middleware implementation for authentication and error handling
+-Organized route handling for logically different functionalities
+-Middleware implementation for authentication and error handling
 
 
 3)Database Efficiency
- - Optimized MongoDB queries
- - Efficient database indexing for quick retrieval of transaction history
+- Optimized MongoDB queries
+- Efficient database indexing for quick retrieval of transaction history
 
 4)Security Implementation
- -Secure password storage using industry-standard hashing algorithms
+-Secure password storage using industry-standard hashing algorithms
 
 
 **Future Enhancements**
+
   1)Publishing REST API documentation using Swagger
   2)Adding admin role and functionalities
