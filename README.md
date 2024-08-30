@@ -47,7 +47,7 @@ Authentication: JSON Web Tokens (JWT)
 - Efficient database indexing for quick retrieval of transaction history
 
 4)Security Implementation
--Secure password storage using industry-standard hashing algorithms
+-Secure password storage using industry standard hashing algorithms
 
 
 **Future Enhancements**
