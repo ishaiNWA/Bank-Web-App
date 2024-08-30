@@ -30,7 +30,6 @@ Authentication: JSON Web Tokens (JWT)
 - Password hashing with salt for enhanced security
 - Atomic database operations to ensure data integrity
 
-
 **Technical Highlights**
 
 1)RESTful API Design 
@@ -40,14 +39,12 @@ Authentication: JSON Web Tokens (JWT)
 -Organized route handling for logically different functionalities
 -Middleware implementation for authentication and error handling
 
-
 3)Database Efficiency
 - Optimized MongoDB queries
 - Efficient database indexing for quick retrieval of transaction history
 
 4)Security Implementation
 -Secure password storage using industry standard hashing algorithms
-
 
 **Future Enhancements**
 
