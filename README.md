@@ -53,4 +53,5 @@ Authentication: JSON Web Tokens (JWT)
 **Future Enhancements**
 
   1)Publishing REST API documentation using Swagger
+  
   2)Adding admin role and functionalities
