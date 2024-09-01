@@ -1,12 +1,14 @@
-Web Bank App
-Overview
-The Web Bank App is a full-stack software system that simulates basic banking operations. This is an educational project that was born out of curiosity and a desire to explore modern technologies and architectural designs used in contemporary web apps. For this project, I independently learned and implemented the MERN (MongoDB, Express.js, React, Node.js) stack through self-directed study and hands-on practice.
-Tech Stack
+# Web Bank App 
 
-Frontend: React.js
-Backend: Node.js with Express.js
-Database: MongoDB
-Authentication: JSON Web Tokens (JWT)
+## Overview
+The Web Bank App is a full-stack software system that simulates basic banking operations. This is an educational project that was born out of curiosity and a desire to explore modern technologies and architectural designs used in contemporary web apps. For this project, I independently learned and implemented the MERN (MongoDB, Express.js, React, Node.js) stack through self-directed study and hands-on practice.  
+
+## Tech Stack
+
+ - Frontend: React.js
+ - Backend: Node.js with Express.js
+ - Database: MongoDB
+ - Authentication: JSON Web Tokens (JWT)
 
 Key Features
 1. User Authentication
