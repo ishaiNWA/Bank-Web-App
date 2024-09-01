@@ -49,10 +49,9 @@ The Web Bank App is a full-stack software system that simulates basic banking op
      
    
 
+## Future Enhancements    
 
-Secure password storage using industry standard hashing algorithms
+1. Publishing REST API documentation using Swagger
+2. Adding admin role and functionalities
 
-Future Enhancements
 
-Publishing REST API documentation using Swagger
-Adding admin role and functionalities
