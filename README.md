@@ -10,21 +10,21 @@ The Web Bank App is a full-stack software system that simulates basic banking op
  - Database: MongoDB
  - Authentication: JSON Web Tokens (JWT)
 
-Key Features
+## Key Features
 1. User Authentication
-
-Secure login and registration system
-Email confirmation for new accounts
-
+    - Secure login and registration system
+    - Email confirmation for new accounts
+      
 2. User Authorization
-
-JWT based authorization for protected private resource access
-
+     - JWT based authorization for protected private resource access
+       
 3. Account Operations
+   -  View current balance
+   -  Perform money transactions
+   -  Access paginated transaction history
+     
 
-View current balance
-Perform money transactions
-Access paginated transaction history
+
 
 4. Security Measures
 
