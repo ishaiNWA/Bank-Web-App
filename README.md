@@ -26,27 +26,29 @@ The Web Bank App is a full-stack software system that simulates basic banking op
 
 
 
-4. Security Measures
 
-Password hashing with salt for enhanced security
-Atomic database operations to ensure data integrity
 
-Technical Highlights
+## Technical Highlights
 1. RESTful API Design
-
-Well-structured endpoints for various banking operations
+   - Well-structured endpoints for various banking operations
+     
 
 2. Express.js Routing
+   -  Organized route handling for logically different functionalities
+   -  Middleware implementation for authentication and error handling
 
-Organized route handling for logically different functionalities
-Middleware implementation for authentication and error handling
 
 3. Database Efficiency
+   -  Optimized MongoDB queries
+   - Efficient database indexing for quick retrieval of transaction history 
 
-Optimized MongoDB queries
-Efficient database indexing for quick retrieval of transaction history
 
 4. Security Implementation
+   - Password hashing with salt for enhanced security
+   - Atomic database operations to ensure data integrity
+     
+   
+
 
 Secure password storage using industry standard hashing algorithms
 
