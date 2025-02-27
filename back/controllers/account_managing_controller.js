@@ -21,7 +21,7 @@ async function getBalance(req, res, next) {
     200,
     "successfully found user's balance",
     "balance",
-    usersBalance,
+    usersBalance
   );
 }
 
@@ -44,7 +44,7 @@ function validatePaginationParams(req, res, next) {
     }
     if (limit !== null && limit < 1) {
       throw new Error(
-        "invalid query parameters: limit must be positive number",
+        "invalid query parameters: limit must be positive number"
       );
     }
     if (offset < 0) {
@@ -60,21 +60,6 @@ function validatePaginationParams(req, res, next) {
 
 /*****************************************************************************/
 async function getTransactions(req, res, next) {
-  // const limit =
-  //   req.query.limit === undefined || req.query.limit === ""
-  //     ? 10
-  //     : req.query.limit;
-  // const offset =
-  //   req.query.offset === undefined || req.query.offset === ""
-  //     ? 0
-  //     : req.query.offset;
-
-  // try {
-  //   validatePaginationParams(limit, offset);
-  // } catch (error) {
-  //   return sendResponse(res, 400, error.message, null, null);
-  // }
-
   const { offset, limit } = req.locals.pagination;
   let transactions = null;
 
@@ -89,26 +74,9 @@ async function getTransactions(req, res, next) {
     200,
     "Transaction withdrawal successful",
     "transactions",
-    transactions,
+    transactions
   );
 }
-
-/*****************************************************************************/
-
-// function validatePaginationParams(limit, offset) {
-//   if (limit === "All") {
-//     limit = null;
-//   } else {
-//     if (!Number.isInteger(Number(limit)) || !Number.isInteger(Number(offset))) {
-//       throw new Error("Query parameters must be integers");
-//     }
-//   }
-//   if (limit < 1 || offset < 0) {
-//     throw new Error(
-//       "invalid query parameters: limit must be positive and offset must be non-negative",
-//     );
-//   }
-// }
 
 /*****************************************************************************/
 
@@ -143,7 +111,7 @@ async function performTransaction(req, res, next) {
       updatedSenderBalance = await subtractFromSender(
         userEmail,
         amount,
-        session,
+        session
       );
       await registerTransaction(userEmail, recipientEmail, amount, session);
     });
@@ -161,7 +129,7 @@ async function performTransaction(req, res, next) {
     200,
     "successful transaction",
     "current balance",
-    updatedSenderBalance,
+    updatedSenderBalance
   );
   return;
 }

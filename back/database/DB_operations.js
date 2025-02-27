@@ -21,7 +21,7 @@ async function findUserByEmail(email) {
 async function findUserBalance(email) {
   const userBalance = await User.findOne(
     { email: email },
-    { balance: 1, _id: 0 },
+    { balance: 1, _id: 0 }
   );
   return userBalance.balance;
 }
@@ -32,7 +32,7 @@ async function addToRecipient(recipientEmail, amount, session = null) {
   await User.updateOne(
     { email: recipientEmail },
     { $inc: { balance: amount } },
-    { session },
+    { session }
   );
 }
 /*****************************************************************************/
@@ -41,7 +41,7 @@ async function subtractFromSender(userEmail, amount, session = null) {
   const userBalance = await User.findOneAndUpdate(
     { email: userEmail },
     { $inc: { balance: -amount } },
-    { new: true, select: "balance", session },
+    { new: true, select: "balance", session }
   );
 
   return userBalance.balance;
@@ -53,7 +53,7 @@ async function deletePendingUserByEmail(email, session = null) {
     {
       userEmail: email,
     },
-    { session },
+    { session }
   );
 }
 /*****************************************************************************/
@@ -80,14 +80,14 @@ async function createPendingUser(pendingUserObj, session = null) {
       },
     ],
 
-    { session },
+    { session }
   );
 }
 /*****************************************************************************/
 
 async function findAndDeletePendingUser(
   confirmationPassword,
-  minSubmitionTime,
+  minSubmitionTime
 ) {
   return await PendingUser.findOneAndDelete({
     confirmationPassword: confirmationPassword,
@@ -129,21 +129,13 @@ async function findUsersTransactions(email, offset, limit = null) {
   return userObj.recentTransactions;
 }
 
-// return await await Transaction.fi})nd({
-//   $or: [{ senderEmail: mail }, { recipientEmail: mail }],
-// })
-//   .sort({ date: -1 })
-//   .skip(offset)
-//   .limit(limit)
-//   .exec();
-
 /*****************************************************************************/
 
 async function registerTransaction(
   userEmail,
   recipientEmail,
   amount,
-  session = null,
+  session = null
 ) {
   const transactionObjs = await Transaction.create(
     [
@@ -154,7 +146,7 @@ async function registerTransaction(
       },
     ],
 
-    { session },
+    { session }
   );
 
   const transactionObj = transactionObjs[0];
@@ -162,7 +154,7 @@ async function registerTransaction(
     transactionObj._id,
     userEmail,
     recipientEmail,
-    session,
+    session
   );
 }
 /*****************************************************************************/
@@ -171,7 +163,7 @@ async function indexTransaction(
   transactionId,
   senderEmail,
   recipientEmail,
-  session,
+  session
 ) {
   const res = await User.updateMany(
     { email: { $in: [senderEmail, recipientEmail] } },
@@ -180,7 +172,7 @@ async function indexTransaction(
         recentTransactions: transactionId,
       },
     },
-    { session },
+    { session }
   );
 }
 

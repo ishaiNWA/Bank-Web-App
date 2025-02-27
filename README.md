@@ -25,9 +25,6 @@ The Web Bank App is a full-stack software system that simulates basic banking op
      
 
 
-
-
-
 ## Technical Highlights
 1. RESTful API Design
    - Well-structured endpoints for various banking operations
