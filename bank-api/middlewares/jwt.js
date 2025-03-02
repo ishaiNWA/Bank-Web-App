@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const ONE_HOUR_MS = 60 * 60 * 1000;
 
 const {
   createBlackListedToken,
@@ -10,12 +11,17 @@ const {
 
 function generateJWT(req, res, next) {
   const email = { email: req.body.userEmail };
-  const options = { expiresIn: "1h" };
-  const token = jwt.sign(email, process.env.ACCESS_TOKEN_SECRET, options);
+  const jwtOptions = { expiresIn: ONE_HOUR_MS };
+  const token = jwt.sign(email, process.env.ACCESS_TOKEN_SECRET, jwtOptions);
+
+  const cookieOptions = {
+    expires: new Date(Date.now() + ONE_HOUR_MS),
+    httpOnly: true,
+  };
+  res.cookie("jwt", token, cookieOptions);
 
   const resBodyData = {
     name: req.name,
-    Authorization: `Bearer${token}`,
   };
 
   sendResponse(res, 200, "login success", "resBodyData", resBodyData);
@@ -23,7 +29,7 @@ function generateJWT(req, res, next) {
 
 /*****************************************************************************/
 
-async function verifyJWT(req, res, next) {
+async function protect(req, res, next) {
   const token = extractToken(req);
   if (null == token) {
     sendResponse(res, 400, "unauthorized request");
@@ -35,7 +41,7 @@ async function verifyJWT(req, res, next) {
       sendResponse(
         res,
         400,
-        "You have logged out from the session. Log in again to continue.",
+        "You have logged out from the session. Log in again to continue."
       );
       return;
     }
@@ -91,11 +97,17 @@ function decodeToken(token) {
 /*****************************************************************************/
 
 function extractToken(req) {
-  const bearerHeader = req.headers["authorization"];
-  if (null == bearerHeader) {
-    return null;
+  if (req.cookies && req.cookies.jwt) {
+    return req.cookies.jwt;
+  } else if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith("Bearer")
+  ) {
+    const authHeader = req.headers.authorization;
+
+    return authHeader.split("Bearer")[1].trim();
   } else {
-    return bearerHeader.split("Bearer")[1];
+    return null;
   }
 }
 
@@ -113,4 +125,4 @@ function sendResponse(res, resStatus, responseExplanation, dataKey, dataValue) {
 
 /*****************************************************************************/
 
-module.exports = { generateJWT, verifyJWT, blacklistToken };
+module.exports = { generateJWT, protect, blacklistToken };

@@ -1,26 +1,22 @@
 const express = require("express");
-const jwtController = require("../controllers/jwt_controller");
+const jwt = require("../middlewares/jwt");
 const accountManagingContoller = require("../controllers/account_managing_controller");
 
 const router = express.Router();
 
-router.get(
-  "/balance",
-  jwtController.verifyJWT,
-  accountManagingContoller.getBalance,
-);
+router.get("/balance", jwt.protect, accountManagingContoller.getBalance);
 
 router.post(
   "/transaction",
-  jwtController.verifyJWT,
-  accountManagingContoller.performTransaction,
+  jwt.protect,
+  accountManagingContoller.performTransaction
 );
 
 router.get(
   "/transactions",
-  jwtController.verifyJWT,
+  jwt.protect,
   accountManagingContoller.validatePaginationParams,
-  accountManagingContoller.getTransactions,
+  accountManagingContoller.getTransactions
 );
 
 module.exports = router;

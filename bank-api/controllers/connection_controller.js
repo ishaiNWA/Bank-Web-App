@@ -181,7 +181,7 @@ async function verifyConfirmationPassword(req, res, next) {
 
 /*****************************************************************************/
 
-async function completeRegistration(req, res, next) {
+async function saveUser(req, res, next) {
   try {
     await createUser({
       name: req.pendingUser.name,
@@ -256,6 +256,6 @@ module.exports = {
   savePendingUser,
   sendConfirmationEmail,
   verifyConfirmationPassword,
-  completeRegistration,
+  saveUser,
   verifyLoginCredentials,
 };

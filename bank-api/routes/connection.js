@@ -1,5 +1,5 @@
 var express = require("express");
-const jwtController = require("../controllers/jwt_controller");
+const jwt = require("../middlewares/jwt");
 var connectionController = require("../controllers/connection_controller");
 
 var router = express.Router();
@@ -8,21 +8,21 @@ router.post(
   "/register",
   connectionController.validateRegistrationDetails,
   connectionController.savePendingUser,
-  connectionController.sendConfirmationEmail,
+  connectionController.sendConfirmationEmail
 );
 
 router.post(
   "/register-confirmation",
   connectionController.verifyConfirmationPassword,
-  connectionController.completeRegistration,
+  connectionController.saveUser
 );
 
 router.post(
   "/login",
   connectionController.verifyLoginCredentials,
-  jwtController.generateJWT,
+  jwt.generateJWT
 );
 
-router.delete("/logout", jwtController.verifyJWT, jwtController.blacklistToken);
+router.delete("/logout", jwt.protect, jwt.blacklistToken);
 
 module.exports = router;
