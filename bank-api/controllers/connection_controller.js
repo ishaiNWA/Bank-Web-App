@@ -239,6 +239,14 @@ async function hashingThePassword(unHashedPassword, salt) {
 
 /*****************************************************************************/
 
+async function inviteStaffMember(newMemberemail) {
+  generatedPassword = Math.random().toString(36).slice(-8);
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await hashingThePassword(req.body.password, salt);
+}
+
+/*****************************************************************************/
+
 function sendResponse(res, resStatus, responseExplanation, dataKey, dataValue) {
   const responseBody = {
     explanation: responseExplanation,
