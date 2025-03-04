@@ -11,8 +11,13 @@ const {
 
 function generateJWT(req, res, next) {
   const email = { email: req.body.userEmail };
+  const role = req.extractedRole;
   const jwtOptions = { expiresIn: ONE_HOUR_MS };
-  const token = jwt.sign(email, process.env.ACCESS_TOKEN_SECRET, jwtOptions);
+  const token = jwt.sign(
+    { email: email, role: role },
+    process.env.ACCESS_TOKEN_SECRET,
+    jwtOptions
+  );
 
   const cookieOptions = {
     expires: new Date(Date.now() + ONE_HOUR_MS),
@@ -29,6 +34,7 @@ function generateJWT(req, res, next) {
 
 /*****************************************************************************/
 
+// validating a valid session for client using JWT functionalities
 async function protect(req, res, next) {
   const token = extractToken(req);
   if (null == token) {
@@ -66,6 +72,22 @@ async function protect(req, res, next) {
 
     next();
   }
+}
+/*****************************************************************************/
+
+async function authorize(permitedRoles) {
+  return (req, res, next) => {
+    const token = extractToken(req);
+    const decodedToken = decodeToken(token);
+    const role = decodedToken.role;
+
+    if (!permitedRoles.includes(role)) {
+      sendResponse(res ,403 ,
+         `Only ${permitedRoles.map(role => String(role)).join(", ")} are permitted to this operation` )
+      return;
+    }
+    next();
+  };
 }
 
 /*****************************************************************************/
@@ -125,4 +147,4 @@ function sendResponse(res, resStatus, responseExplanation, dataKey, dataValue) {
 
 /*****************************************************************************/
 
-module.exports = { generateJWT, protect, blacklistToken };
+module.exports = { generateJWT, protect,, authorize, blacklistToken };

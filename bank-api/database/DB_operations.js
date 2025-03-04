@@ -3,6 +3,7 @@ const User = require("../model/User");
 const PendingUser = require("../model/PendingUsers");
 const Transaction = require("../model/Transactions");
 const BlackListedToken = require("../model/BlackListedToken");
+const UserInvitation = require("../model/UserInvitation");
 
 /*****************************************************************************/
 
@@ -58,12 +59,7 @@ async function deletePendingUserByEmail(email, session = null) {
 /*****************************************************************************/
 
 async function createUser(userObj) {
-  await User.create({
-    name: userObj.name,
-    email: userObj.email,
-    hashedPassword: userObj.hashedPassword,
-    salt: userObj.salt,
-  });
+  await User.create(userObj);
 }
 /*****************************************************************************/
 
@@ -177,15 +173,33 @@ async function indexTransaction(
 
 /*****************************************************************************/
 
+async function createUserInvitation(userInvitationObj) {
+  await UserInvitation.create({
+    name: userInvitationObj.name,
+    email: userInvitationObj.email,
+    role: userInvitationObj.role,
+    hashedToken: userInvitationObj.hashedToken,
+  });
+}
+
+/*****************************************************************************/
+
+async function findUserInvitationByEmail(email) {
+  return await UserInvitation.findOne({ email: email });
+}
+/*****************************************************************************/
+
 module.exports = {
   mongoose,
   connectToDB,
   findUserByEmail,
   deletePendingUserByEmail,
-  createPendingUser,
   findAndDeletePendingUser,
   createUser,
+  createUserInvitation,
+  findUserInvitationByEmail,
   createBlackListedToken,
+  createPendingUser,
   isBlackListedToken,
   findUsersTransactions,
   addToRecipient,

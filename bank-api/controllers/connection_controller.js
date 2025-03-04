@@ -5,6 +5,8 @@ const {
   createPendingUser,
   findAndDeletePendingUser,
   createUser,
+  createUserInvitation,
+  findUserInvitationByEmail,
 } = require("../database/DB_operations");
 
 const nodemailer = require("nodemailer");
@@ -87,7 +89,7 @@ function isValidPasswordFormat(password) {
 }
 /*****************************************************************************/
 
-async function savePendingUser(req, res, next) {
+async function registerPendingUser(req, res, next) {
   let session;
   let generatedPassword;
   try {
@@ -120,8 +122,10 @@ async function savePendingUser(req, res, next) {
     }
   }
 
-  req.confirmationPassword = generatedPassword;
-  next();
+  req.code = generatedPassword;
+  req.emailText = `Please resend this registration confirmation code: ${generatedPassword} to ...`;
+  // The "..." part will be added later
+  sendConfirmationEmail(res, req, next);
 }
 
 /*****************************************************************************/
@@ -131,7 +135,7 @@ function sendConfirmationEmail(req, res, next) {
     from: process.env.EMAIL_USER,
     to: req.body.userEmail,
     subject: "👋 Hello from Node.js 🚀",
-    text: `This is the confirmation code: ${req.confirmationPassword} 📧💻`,
+    text: req.emailText,
   };
 
   transporter.sendMail(mailOptions, (error, info) => {
@@ -181,7 +185,7 @@ async function verifyConfirmationPassword(req, res, next) {
 
 /*****************************************************************************/
 
-async function saveUser(req, res, next) {
+async function registerUser(req, res, next) {
   try {
     await createUser({
       name: req.pendingUser.name,
@@ -225,8 +229,7 @@ async function verifyLoginCredentials(req, res, next) {
     return;
   }
 
-  req.name = registeredUser.name;
-
+  req.extractedRole = registeredUser.role;
   next();
 }
 
@@ -239,14 +242,46 @@ async function hashingThePassword(unHashedPassword, salt) {
 
 /*****************************************************************************/
 
-async function inviteStaffMember(newMemberemail) {
-  generatedPassword = Math.random().toString(36).slice(-8);
+async function inviteManagerMember(req, res, next) {
+  generatedToken = Math.random().toString(36).slice(-8);
   const salt = await bcrypt.genSalt(10);
-  const hashedPassword = await hashingThePassword(req.body.password, salt);
+  const hashedToken = await hashingThePassword(generatedToken, salt);
+
+  const invitedMemberObj = {
+    name: req.body.userName,
+    email: req.body.userEmail,
+    role: "manager",
+    hashedToken: hashedToken,
+  };
+  await createUserInvitation(invitedMemberObj);
+
+  req.code = generatedToken;
+  req.emailText = `This is your manager registration code: ${generatedToken}
+  Please send this code along with your credentials to... `;
+  // The "..." part will be added later
+  sendConfirmationEmail(req, res, next);
 }
 
 /*****************************************************************************/
 
+async function registerManager(req, res, next) {
+  const userInvDoc = await findUserInvitationByEmail(email);
+
+  if (userInvDoc && (await bcrypt.compare(userInvDoc.hashedToken, req.token))) {
+    generatedPassword = Math.random().toString(36).slice(-8);
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await hashingThePassword(req.body.password, salt);
+
+    createUser({
+      name: userInvDoc.name,
+      email: userInvDoc.email,
+      role: userInvDoc.role,
+      hashedPassword: hashedPassword,
+    });
+  }
+}
+
+/*****************************************************************************/
 function sendResponse(res, resStatus, responseExplanation, dataKey, dataValue) {
   const responseBody = {
     explanation: responseExplanation,
@@ -261,9 +296,10 @@ function sendResponse(res, resStatus, responseExplanation, dataKey, dataValue) {
 
 module.exports = {
   validateRegistrationDetails,
-  savePendingUser,
-  sendConfirmationEmail,
+  registerPendingUser,
   verifyConfirmationPassword,
-  saveUser,
+  registerUser,
   verifyLoginCredentials,
+  inviteManagerMember,
+  registerManager,
 };

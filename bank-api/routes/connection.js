@@ -4,17 +4,20 @@ var connectionController = require("../controllers/connection_controller");
 
 var router = express.Router();
 
+router.post("/invite-manager", connectionController.inviteManagerMember);
+
+router.post("/register-manager", connectionController.registerManager);
+
 router.post(
   "/register",
   connectionController.validateRegistrationDetails,
-  connectionController.savePendingUser,
-  connectionController.sendConfirmationEmail
+  connectionController.registerPendingUser
 );
 
 router.post(
   "/register-confirmation",
   connectionController.verifyConfirmationPassword,
-  connectionController.saveUser
+  connectionController.registerUser
 );
 
 router.post(

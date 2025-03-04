@@ -20,6 +20,11 @@ const userSchema = new Schema({
     type: String,
     required: true,
   },
+  role: {
+    type: String,
+    enum: ["client", "manager"],
+    deafult: "client",
+  },
   balance: {
     type: Number,
     default: 1000,

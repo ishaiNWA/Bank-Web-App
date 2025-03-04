@@ -19,7 +19,7 @@ const userInvitationSchema = new Schema({
     enum: ["client", "manager"],
     deafult: "client",
   },
-  token: {
+  hashedToken: {
     type: String,
     required: true,
   },
