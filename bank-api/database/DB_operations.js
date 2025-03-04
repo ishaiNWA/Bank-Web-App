@@ -3,7 +3,7 @@ const User = require("../model/User");
 const PendingUser = require("../model/PendingUsers");
 const Transaction = require("../model/Transactions");
 const BlackListedToken = require("../model/BlackListedToken");
-const UserInvitation = require("../model/UserInvitation");
+const ManagerInvitation = require("../model/ManagerInvitation");
 
 /*****************************************************************************/
 
@@ -173,19 +173,14 @@ async function indexTransaction(
 
 /*****************************************************************************/
 
-async function createUserInvitation(userInvitationObj) {
-  await UserInvitation.create({
-    name: userInvitationObj.name,
-    email: userInvitationObj.email,
-    role: userInvitationObj.role,
-    hashedToken: userInvitationObj.hashedToken,
-  });
+async function createManagerInvitation(managerInvitationObj) {
+  return await ManagerInvitation.create(managerInvitationObj);
 }
 
 /*****************************************************************************/
 
-async function findUserInvitationByEmail(email) {
-  return await UserInvitation.findOne({ email: email });
+async function findManagerInvitationByEmail(email) {
+  return await ManagerInvitation.findOne({ email: email });
 }
 /*****************************************************************************/
 
@@ -196,8 +191,8 @@ module.exports = {
   deletePendingUserByEmail,
   findAndDeletePendingUser,
   createUser,
-  createUserInvitation,
-  findUserInvitationByEmail,
+  createManagerInvitation,
+  findManagerInvitationByEmail,
   createBlackListedToken,
   createPendingUser,
   isBlackListedToken,

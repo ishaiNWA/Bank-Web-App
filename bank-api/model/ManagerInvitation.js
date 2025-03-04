@@ -4,7 +4,7 @@ const ONE_HOUR_MS = 60 * 60 * 1000;
 
 const { Schema, model } = mongoose;
 
-const userInvitationSchema = new Schema({
+const managerInvitationSchema = new Schema({
   name: {
     type: String,
     required: true,
@@ -26,10 +26,10 @@ const userInvitationSchema = new Schema({
   createdAt: {
     type: Date,
     default: Date.now,
-    expires: process.env.USER_INVITATION_EXP_TIME || ONE_HOUR_MS,
+    expires: process.env.MANAGER_INVITATION_EXP_TIME || ONE_HOUR_MS,
   },
 });
 
-const UserInvitation = model("UserInvitation", userInvitationSchema);
+const ManagerInvitation = model("ManagerInvitation", managerInvitationSchema);
 
-module.exports = UserInvitation;
+module.exports = ManagerInvitation;

@@ -5,8 +5,8 @@ const {
   createPendingUser,
   findAndDeletePendingUser,
   createUser,
-  createUserInvitation,
-  findUserInvitationByEmail,
+  createManagerInvitation,
+  findManagerInvitationByEmail,
 } = require("../database/DB_operations");
 
 const nodemailer = require("nodemailer");
@@ -253,7 +253,7 @@ async function inviteManagerMember(req, res, next) {
     role: "manager",
     hashedToken: hashedToken,
   };
-  await createUserInvitation(invitedMemberObj);
+  await createManagerInvitation(invitedMemberObj);
 
   req.code = generatedToken;
   req.emailText = `This is your manager registration code: ${generatedToken}
@@ -265,17 +265,20 @@ async function inviteManagerMember(req, res, next) {
 /*****************************************************************************/
 
 async function registerManager(req, res, next) {
-  const userInvDoc = await findUserInvitationByEmail(email);
+  const managerInvDoc = await findManagerInvitationByEmail(email);
 
-  if (userInvDoc && (await bcrypt.compare(userInvDoc.hashedToken, req.token))) {
+  if (
+    managerInvDoc &&
+    (await bcrypt.compare(managerInvDoc.hashedToken, req.token))
+  ) {
     generatedPassword = Math.random().toString(36).slice(-8);
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await hashingThePassword(req.body.password, salt);
 
     createUser({
-      name: userInvDoc.name,
-      email: userInvDoc.email,
-      role: userInvDoc.role,
+      name: managerInvDoc.name,
+      email: managerInvDoc.email,
+      role: managerInvDoc.role,
       hashedPassword: hashedPassword,
     });
   }

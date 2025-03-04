@@ -82,8 +82,11 @@ async function authorize(permitedRoles) {
     const role = decodedToken.role;
 
     if (!permitedRoles.includes(role)) {
-      sendResponse(res ,403 ,
-         `Only ${permitedRoles.map(role => String(role)).join(", ")} are permitted to this operation` )
+      sendResponse(
+        res,
+        403,
+        `Only ${permitedRoles.map((role) => String(role)).join(", ")} are permitted to this operation`
+      );
       return;
     }
     next();
@@ -147,4 +150,4 @@ function sendResponse(res, resStatus, responseExplanation, dataKey, dataValue) {
 
 /*****************************************************************************/
 
-module.exports = { generateJWT, protect,, authorize, blacklistToken };
+module.exports = { generateJWT, protect, authorize, blacklistToken };
