@@ -9,6 +9,7 @@ const {
   findManagerInvitationByEmail,
 } = require("../database/DB_operations");
 
+const USER_ROLES = require("../constants/roles");
 const nodemailer = require("nodemailer");
 const bcrypt = require("bcrypt");
 const validator = require("email-validator");
@@ -250,7 +251,7 @@ async function inviteManagerMember(req, res, next) {
   const invitedMemberObj = {
     name: req.body.userName,
     email: req.body.userEmail,
-    role: "manager",
+    role: USER_ROLES.MANAGER,
     hashedToken: hashedToken,
   };
   await createManagerInvitation(invitedMemberObj);

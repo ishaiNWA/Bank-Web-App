@@ -1,5 +1,6 @@
 //import mongoose from 'mongoose';
 const mongoose = require("mongoose");
+const USER_ROLES = require("../constants/roles");
 
 const { Schema, model } = mongoose;
 
@@ -22,8 +23,8 @@ const userSchema = new Schema({
   },
   role: {
     type: String,
-    enum: ["client", "manager"],
-    deafult: "client",
+    enum: Object.values(USER_ROLES),
+    deafult: USER_ROLES.CLIENT,
   },
   balance: {
     type: Number,

@@ -1,5 +1,6 @@
 //import mongoose from 'mongoose';
 const mongoose = require("mongoose");
+const USER_ROLES = require("../constants/roles");
 const ONE_HOUR_MS = 60 * 60 * 1000;
 
 const { Schema, model } = mongoose;
@@ -16,8 +17,8 @@ const managerInvitationSchema = new Schema({
 
   role: {
     type: String,
-    enum: ["client", "manager"],
-    deafult: "client",
+    enum: [USER_ROLES.MANAGER, USER_ROLES.ADMIN],
+    required: true,
   },
   hashedToken: {
     type: String,
