@@ -10,11 +10,11 @@ const {
 /*****************************************************************************/
 
 function generateJWT(req, res, next) {
-  const email = { email: req.body.userEmail };
+  const email = req.body.userEmail;
   const role = req.extractedRole;
   const jwtOptions = { expiresIn: ONE_HOUR_MS };
   const token = jwt.sign(
-    { email: email, role: role },
+    { email, role },
     process.env.ACCESS_TOKEN_SECRET,
     jwtOptions
   );
@@ -53,6 +53,7 @@ async function protect(req, res, next) {
     }
 
     decodedToken = decodeToken(token);
+    console.log("decodedToken\n" + JSON.stringify(decodedToken));
   } catch (error) {
     if (error.name === "TokenExpiredError") {
       sendResponse(res, 401, error.message);
@@ -75,7 +76,7 @@ async function protect(req, res, next) {
 }
 /*****************************************************************************/
 
-async function authorize(permitedRoles) {
+function authorize(permitedRoles) {
   return (req, res, next) => {
     const token = extractToken(req);
     const decodedToken = decodeToken(token);
@@ -123,6 +124,8 @@ function decodeToken(token) {
 
 function extractToken(req) {
   if (req.cookies && req.cookies.jwt) {
+    console.log("FOUND JWT COOKIE!!\n");
+    console.log(JSON.stringify(req.cookies));
     return req.cookies.jwt;
   } else if (
     req.headers.authorization &&

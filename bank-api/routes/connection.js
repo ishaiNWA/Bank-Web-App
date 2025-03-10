@@ -1,10 +1,15 @@
 var express = require("express");
 const jwt = require("../middlewares/jwt");
 var connectionController = require("../controllers/connection_controller");
-
+const USER_ROLES = require("../constants/roles");
 var router = express.Router();
 
-router.post("/invite-manager", connectionController.inviteManagerMember);
+router.post(
+  "/invite-manager",
+  jwt.protect,
+  jwt.authorize(USER_ROLES.ADMIN),
+  connectionController.inviteManagerMember
+);
 
 router.post("/register-manager", connectionController.registerManager);
 

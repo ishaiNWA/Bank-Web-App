@@ -15,13 +15,14 @@ const bcrypt = require("bcrypt");
 const validator = require("email-validator");
 
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  service: "gmail", // Switch back to using 'service' which handles some settings automatically
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASSWORD,
+    // Remove the "type" property - let Nodemailer determine it automatically
   },
+  debug: true, // Add debug to see detailed logs
 });
-
 /*****************************************************************************/
 
 async function validateRegistrationDetails(req, res, next) {
@@ -126,20 +127,22 @@ async function registerPendingUser(req, res, next) {
   req.code = generatedPassword;
   req.emailText = `Please resend this registration confirmation code: ${generatedPassword} to ...`;
   // The "..." part will be added later
-  sendConfirmationEmail(res, req, next);
+  await sendConfirmationEmail(req, res, next);
 }
 
 /*****************************************************************************/
 
-function sendConfirmationEmail(req, res, next) {
+async function sendConfirmationEmail(req, res, next) {
   const mailOptions = {
     from: process.env.EMAIL_USER,
     to: req.body.userEmail,
     subject: "👋 Hello from Node.js 🚀",
     text: req.emailText,
   };
-
-  transporter.sendMail(mailOptions, (error, info) => {
+  // Verify transporter connection first
+  const verifyResult = await transporter.verify();
+  console.log("Transporter verification:", verifyResult);
+  await transporter.sendMail(mailOptions, (error, info) => {
     if (error) {
       console.error("❌ Error:", error.message);
       sendResponse(
@@ -260,7 +263,7 @@ async function inviteManagerMember(req, res, next) {
   req.emailText = `This is your manager registration code: ${generatedToken}
   Please send this code along with your credentials to... `;
   // The "..." part will be added later
-  sendConfirmationEmail(req, res, next);
+  await sendConfirmationEmail(req, res, next);
 }
 
 /*****************************************************************************/
