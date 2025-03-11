@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 const { Schema, model } = mongoose;
-
+const ONE_HR_EXP_TIME_IN_SEC = 60 * 60;
 const pendingUserSchema = new Schema({
   name: {
     type: String,
@@ -23,7 +23,9 @@ const pendingUserSchema = new Schema({
   submissionTime: {
     type: Date,
     default: Date.now,
-    expires: parseInt(process.env.PENDING_USER_EXPIRATION_SECONDS),
+    expires: parseInt(
+      process.env.PENDING_USER_EXPIRATION_SECONDS || ONE_HR_EXP_TIME_IN_SEC
+    ),
   },
 });
 

@@ -9,10 +9,32 @@ const ManagerInvitation = require("../model/ManagerInvitation");
 
 async function connectToDB() {
   await mongoose.connect(process.env.MONGODB_URI);
-  console.log("connection DB");
+  console.log("connection was made to: ", process.env.MONGODB_URI);
 }
 /*****************************************************************************/
 
+/**
+ * Executes database operations within a transaction
+ * @param {function(session: mongoose.ClientSession): Promise<any>} dbExecutedOperations - Function that receives a session and returns a promise
+ * @returns {Promise<any>} The result of the executed operations
+ */
+
+async function executeWithTransaction(operationsCallback) {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    const result = await operationsCallback(session);
+    await session.commitTransaction();
+    return result;
+  } catch (error) {
+    await session.abortTransaction();
+    throw error;
+  } finally {
+    await session.endSession();
+  }
+}
+
+/*****************************************************************************/
 async function findUserByEmail(email) {
   return await User.findOne({ email: email });
 }
@@ -58,8 +80,13 @@ async function deletePendingUserByEmail(email, session = null) {
 }
 /*****************************************************************************/
 
-async function createUser(userObj) {
-  await User.create(userObj);
+async function deleteManagerInvitationByEmail(email, session = null) {
+  return await ManagerInvitation.deleteOne({ email: email }, { session });
+}
+/*****************************************************************************/
+
+async function createUser(userObj, session = null) {
+  return await User.create([userObj], { session });
 }
 /*****************************************************************************/
 
@@ -173,8 +200,8 @@ async function indexTransaction(
 
 /*****************************************************************************/
 
-async function createManagerInvitation(managerInvitationObj) {
-  return await ManagerInvitation.create(managerInvitationObj);
+async function createManagerInvitation(managerInvitationObj, session = null) {
+  return await ManagerInvitation.create([managerInvitationObj], { session });
 }
 
 /*****************************************************************************/
@@ -201,4 +228,6 @@ module.exports = {
   subtractFromSender,
   registerTransaction,
   findUserBalance,
+  executeWithTransaction,
+  deleteManagerInvitationByEmail,
 };

@@ -7,22 +7,16 @@ const {
   createUser,
   createManagerInvitation,
   findManagerInvitationByEmail,
-} = require("../database/DB_operations");
+  executeWithTransaction,
+  deleteManagerInvitationByEmail,
+} = require("../services/db-service");
 
+const sendMail = require("../services/mail-service");
+const getServerIP = require("../services/os-service");
 const USER_ROLES = require("../constants/roles");
-const nodemailer = require("nodemailer");
 const bcrypt = require("bcrypt");
 const validator = require("email-validator");
 
-const transporter = nodemailer.createTransport({
-  service: "gmail", // Switch back to using 'service' which handles some settings automatically
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD,
-    // Remove the "type" property - let Nodemailer determine it automatically
-  },
-  debug: true, // Add debug to see detailed logs
-});
 /*****************************************************************************/
 
 async function validateRegistrationDetails(req, res, next) {
@@ -48,6 +42,7 @@ async function validateRegistrationDetails(req, res, next) {
     }
   } catch (error) {
     sendResponse(res, 500, "internal error", "error", error);
+    return;
   }
   next();
 }
@@ -116,7 +111,6 @@ async function registerPendingUser(req, res, next) {
   } catch (error) {
     console.log(error);
     sendResponse(res, 500, "internal error", "error", error);
-
     return;
   } finally {
     if (session) {
@@ -125,38 +119,32 @@ async function registerPendingUser(req, res, next) {
   }
 
   req.code = generatedPassword;
-  req.emailText = `Please resend this registration confirmation code: ${generatedPassword} to ...`;
-  // The "..." part will be added later
-  await sendConfirmationEmail(req, res, next);
-}
 
-/*****************************************************************************/
-
-async function sendConfirmationEmail(req, res, next) {
   const mailOptions = {
-    from: process.env.EMAIL_USER,
     to: req.body.userEmail,
-    subject: "👋 Hello from Node.js 🚀",
-    text: req.emailText,
+    subject: "user register confirmation code",
+    text: `Please send this code to http://${getServerIP()}:${process.env.PORT}/api/connection/register-confirmation
+Your code is: ${req.code}
+Thank you for registering with our service.`,
   };
-  // Verify transporter connection first
-  const verifyResult = await transporter.verify();
-  console.log("Transporter verification:", verifyResult);
-  await transporter.sendMail(mailOptions, (error, info) => {
-    if (error) {
+
+  sendMail(
+    mailOptions,
+    (info) => {
+      console.log("✅ Email sent:", info.response);
+      sendResponse(res, 200, "mail sent", "mail info", info);
+    },
+    (error) => {
       console.error("❌ Error:", error.message);
       sendResponse(
         res,
         500,
-        `confirmation mail sending failure with ${+error.messages}`,
+        `mail sending failure with ${+error.messages}`,
         "error",
         error
       );
-    } else {
-      console.log("✅ Email sent:", info.response);
-      sendResponse(res, 200, "confirmation mail sent", "mail info", info);
     }
-  });
+  );
 }
 
 /*****************************************************************************/
@@ -257,34 +245,101 @@ async function inviteManagerMember(req, res, next) {
     role: USER_ROLES.MANAGER,
     hashedToken: hashedToken,
   };
-  await createManagerInvitation(invitedMemberObj);
+
+  try {
+    executeWithTransaction(async (session) => {
+      //ensure no duplication of ManagerInvitation document
+      await deleteManagerInvitationByEmail(req.body.userEmail, session);
+      await createManagerInvitation(invitedMemberObj, session);
+    });
+  } catch (error) {
+    sendResponse(res, 500, "internal error", "error", error);
+  }
 
   req.code = generatedToken;
-  req.emailText = `This is your manager registration code: ${generatedToken}
-  Please send this code along with your credentials to... `;
-  // The "..." part will be added later
-  await sendConfirmationEmail(req, res, next);
+
+  const mailOptions = {
+    to: req.body.userEmail,
+    subject: "manager invitation code",
+    text: `Please send your email along with this code to http://${getServerIP()}:${process.env.PORT || 3000}/api/connection/register-manager
+Your code is: ${req.code}
+Thank you for registering with our service.`,
+  };
+
+  sendMail(
+    mailOptions,
+    (info) => {
+      console.log("✅ Email sent:", info.response);
+      sendResponse(res, 200, "mail sent", "mail info", info);
+    },
+    (error) => {
+      console.error("❌ Error:", error.message);
+      sendResponse(
+        res,
+        500,
+        `mail sending failure with ${+error.messages}`,
+        "error",
+        error
+      );
+    }
+  );
+}
+
+/*****************************************************************************/
+
+async function validateManagerInvitation(req, res, next) {
+  let managerInvDoc;
+  try {
+    managerInvDoc = await findManagerInvitationByEmail(req.body.userEmail);
+  } catch (error) {
+    sendResponse(res, 500, "internal error", "error", error);
+    return;
+  }
+
+  if (
+    !managerInvDoc ||
+    !(await bcrypt.compare(req.body.token, managerInvDoc.hashedToken))
+  ) {
+    sendResponse(
+      res,
+      403,
+      "Invalid invitation or token. Please retry again with correct credentials or request a new invitation link."
+    );
+    return;
+  }
+  req.managerInvDoc = managerInvDoc;
+  next();
 }
 
 /*****************************************************************************/
 
 async function registerManager(req, res, next) {
-  const managerInvDoc = await findManagerInvitationByEmail(email);
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await hashingThePassword(req.body.password, salt);
+  const managerInvDoc = req.managerInvDoc;
 
-  if (
-    managerInvDoc &&
-    (await bcrypt.compare(managerInvDoc.hashedToken, req.token))
-  ) {
-    generatedPassword = Math.random().toString(36).slice(-8);
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await hashingThePassword(req.body.password, salt);
-
-    createUser({
-      name: managerInvDoc.name,
-      email: managerInvDoc.email,
-      role: managerInvDoc.role,
-      hashedPassword: hashedPassword,
+  try {
+    await executeWithTransaction(async (session) => {
+      await deleteManagerInvitationByEmail(managerInvDoc.email, session);
+      await createUser(
+        {
+          name: managerInvDoc.name,
+          email: managerInvDoc.email,
+          role: managerInvDoc.role,
+          hashedPassword: hashedPassword,
+        },
+        session
+      );
     });
+    sendResponse(
+      res,
+      200,
+      "A manager-role user has been successfully registered",
+      null,
+      null
+    );
+  } catch (error) {
+    sendResponse(res, 500, "internal error", "error", error);
   }
 }
 
@@ -308,5 +363,6 @@ module.exports = {
   registerUser,
   verifyLoginCredentials,
   inviteManagerMember,
+  validateManagerInvitation,
   registerManager,
 };

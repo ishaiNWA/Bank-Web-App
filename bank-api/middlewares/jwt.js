@@ -5,7 +5,7 @@ const {
   createBlackListedToken,
   isBlackListedToken,
   findUserByEmail,
-} = require("../database/DB_operations");
+} = require("../services/db-service");
 
 /*****************************************************************************/
 
@@ -53,7 +53,6 @@ async function protect(req, res, next) {
     }
 
     decodedToken = decodeToken(token);
-    console.log("decodedToken\n" + JSON.stringify(decodedToken));
   } catch (error) {
     if (error.name === "TokenExpiredError") {
       sendResponse(res, 401, error.message);
@@ -124,8 +123,6 @@ function decodeToken(token) {
 
 function extractToken(req) {
   if (req.cookies && req.cookies.jwt) {
-    console.log("FOUND JWT COOKIE!!\n");
-    console.log(JSON.stringify(req.cookies));
     return req.cookies.jwt;
   } else if (
     req.headers.authorization &&

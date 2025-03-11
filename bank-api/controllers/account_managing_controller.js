@@ -6,7 +6,7 @@ const {
   subtractFromSender,
   registerTransaction,
   findUserBalance,
-} = require("../database/DB_operations");
+} = require("../services/db-service");
 const validator = require("email-validator");
 async function getBalance(req, res, next) {
   let usersBalance;

@@ -1,4 +1,4 @@
-const dotenv = require("dotenv");
+require("dotenv").config({ path: "./.env" });
 const createError = require("http-errors");
 const express = require("express");
 const path = require("path");
@@ -7,9 +7,9 @@ const morganLogger = require("morgan");
 const connectionRouter = require("./routes/connection");
 const accountManagingRouter = require("./routes/account_managing");
 const cors = require("cors");
-const dbClient = require("./database/DB_operations");
+const dbClient = require("./services/db-service");
 const app = express();
-dotenv.config({ path: "./.env" });
+
 // const errorHandler = require("./middleware/errors"); TODO :: create error handler...
 
 const PORT = process.env.PORT || 3000;

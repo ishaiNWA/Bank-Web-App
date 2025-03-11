@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const { Schema, model } = mongoose;
+const DEAFULT_EXP_TIME_IN_SEC = 60 * 60 * 24;
 
 const blackListedTokensSchema = new Schema({
   token: {
@@ -9,7 +10,10 @@ const blackListedTokensSchema = new Schema({
   createdAt: {
     type: Date,
     default: Date.now,
-    expires: parseInt(process.env.BLACK_LISTED_TOKEN_EXPIRATION_SECONDS),
+    expires: parseInt(
+      process.env.BLACK_LISTED_TOKEN_EXPIRATION_SECONDS ||
+        DEAFULT_EXP_TIME_IN_SEC
+    ),
   },
 });
 

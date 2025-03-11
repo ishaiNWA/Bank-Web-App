@@ -11,7 +11,12 @@ router.post(
   connectionController.inviteManagerMember
 );
 
-router.post("/register-manager", connectionController.registerManager);
+router.post(
+  "/register-manager",
+  connectionController.validateRegistrationDetails,
+  connectionController.validateManagerInvitation,
+  connectionController.registerManager
+);
 
 router.post(
   "/register",
