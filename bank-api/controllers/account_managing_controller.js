@@ -8,21 +8,17 @@ const {
   findUserBalance,
 } = require("../services/db-service");
 const validator = require("email-validator");
+
+/*****************************************************************************/
 async function getBalance(req, res, next) {
   let usersBalance;
   try {
-    usersBalance = await findUserBalance(req.userEmail);
+    usersBalance = await findUserBalance(req.targetUserEmail);
   } catch (error) {
-    sendResponse(res, 500, "internal error", "error", error);
+    sendResponse(res, 500, "internal error", "error", error.message);
     return;
   }
-  sendResponse(
-    res,
-    200,
-    "successfully found user's balance",
-    "balance",
-    usersBalance
-  );
+  sendResponse(res, 200, "successfully found user's balance", "balance", usersBalance);
 }
 
 /*****************************************************************************/
@@ -35,17 +31,12 @@ function validatePaginationParams(req, res, next) {
     if (limit === "All") {
       limit = null;
     } else {
-      if (
-        !Number.isInteger(Number(limit)) ||
-        !Number.isInteger(Number(offset))
-      ) {
+      if (!Number.isInteger(Number(limit)) || !Number.isInteger(Number(offset))) {
         throw new Error("Query parameters must be integers");
       }
     }
     if (limit !== null && limit < 1) {
-      throw new Error(
-        "invalid query parameters: limit must be positive number"
-      );
+      throw new Error("invalid query parameters: limit must be positive number");
     }
     if (offset < 0) {
       throw new Error("invalid query parameters: offset must be non-negative");
@@ -64,18 +55,13 @@ async function getTransactions(req, res, next) {
   let transactions = null;
 
   try {
-    transactions = await findUsersTransactions(req.userEmail, offset, limit);
+    transactions = await findUsersTransactions(req.targetUserEmail, offset, limit);
   } catch (error) {
-    sendResponse(res, 500, "internal error", null, null);
+    sendResponse(res, 500, "internal error", "error", error.message);
+    return;
   }
 
-  sendResponse(
-    res,
-    200,
-    "Transaction withdrawal successful",
-    "transactions",
-    transactions
-  );
+  sendResponse(res, 200, "Transaction withdrawal successful", "transactions", transactions);
 }
 
 /*****************************************************************************/
@@ -108,11 +94,7 @@ async function performTransaction(req, res, next) {
     await session.withTransaction(async () => {
       await addToRecipient(recipientEmail, amount, session);
 
-      updatedSenderBalance = await subtractFromSender(
-        userEmail,
-        amount,
-        session
-      );
+      updatedSenderBalance = await subtractFromSender(userEmail, amount, session);
       await registerTransaction(userEmail, recipientEmail, amount, session);
     });
   } catch (error) {
@@ -124,13 +106,7 @@ async function performTransaction(req, res, next) {
     }
   }
 
-  sendResponse(
-    res,
-    200,
-    "successful transaction",
-    "current balance",
-    updatedSenderBalance
-  );
+  sendResponse(res, 200, "successful transaction", "current balance", updatedSenderBalance);
   return;
 }
 

@@ -31,13 +31,7 @@ async function validateRegistrationDetails(req, res, next) {
 
   try {
     if (await isUserNameExisted(userEmail)) {
-      sendResponse(
-        res,
-        400,
-        "email address already existed in system",
-        null,
-        null
-      );
+      sendResponse(res, 400, "email address already existed in system", null, null);
       return;
     }
   } catch (error) {
@@ -80,8 +74,7 @@ function isValidName(name) {
 
 function isValidPasswordFormat(password) {
   console.log("password is :" + password);
-  const passwordRegex =
-    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{5,20}$/;
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{5,20}$/;
   return passwordRegex.test(password);
 }
 /*****************************************************************************/
@@ -136,13 +129,7 @@ Thank you for registering with our service.`,
     },
     (error) => {
       console.error("❌ Error:", error.message);
-      sendResponse(
-        res,
-        500,
-        `mail sending failure with ${+error.messages}`,
-        "error",
-        error
-      );
+      sendResponse(res, 500, `mail sending failure with ${+error.messages}`, "error", error);
     }
   );
 }
@@ -274,13 +261,7 @@ Thank you for registering with our service.`,
     },
     (error) => {
       console.error("❌ Error:", error.message);
-      sendResponse(
-        res,
-        500,
-        `mail sending failure with ${+error.messages}`,
-        "error",
-        error
-      );
+      sendResponse(res, 500, `mail sending failure with ${+error.messages}`, "error", error);
     }
   );
 }
@@ -296,10 +277,7 @@ async function validateManagerInvitation(req, res, next) {
     return;
   }
 
-  if (
-    !managerInvDoc ||
-    !(await bcrypt.compare(req.body.token, managerInvDoc.hashedToken))
-  ) {
+  if (!managerInvDoc || !(await bcrypt.compare(req.body.token, managerInvDoc.hashedToken))) {
     sendResponse(
       res,
       403,
@@ -331,13 +309,7 @@ async function registerManager(req, res, next) {
         session
       );
     });
-    sendResponse(
-      res,
-      200,
-      "A manager-role user has been successfully registered",
-      null,
-      null
-    );
+    sendResponse(res, 200, "A manager-role user has been successfully registered", null, null);
   } catch (error) {
     sendResponse(res, 500, "internal error", "error", error);
   }

@@ -1,5 +1,6 @@
 var express = require("express");
 const jwt = require("../middlewares/jwt");
+const accessControl = require("../middlewares/access-control");
 var connectionController = require("../controllers/connection_controller");
 const USER_ROLES = require("../constants/roles");
 var router = express.Router();
@@ -7,7 +8,7 @@ var router = express.Router();
 router.post(
   "/invite-manager",
   jwt.protect,
-  jwt.authorize(USER_ROLES.ADMIN),
+  accessControl.authorize(USER_ROLES.ADMIN),
   connectionController.inviteManagerMember
 );
 
@@ -30,11 +31,7 @@ router.post(
   connectionController.registerUser
 );
 
-router.post(
-  "/login",
-  connectionController.verifyLoginCredentials,
-  jwt.generateJWT
-);
+router.post("/login", connectionController.verifyLoginCredentials, jwt.generateJWT);
 
 router.delete("/logout", jwt.protect, jwt.blacklistToken);
 

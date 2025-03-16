@@ -13,11 +13,7 @@ function generateJWT(req, res, next) {
   const email = req.body.userEmail;
   const role = req.extractedRole;
   const jwtOptions = { expiresIn: ONE_HOUR_MS };
-  const token = jwt.sign(
-    { email, role },
-    process.env.ACCESS_TOKEN_SECRET,
-    jwtOptions
-  );
+  const token = jwt.sign({ email, role }, process.env.ACCESS_TOKEN_SECRET, jwtOptions);
 
   const cookieOptions = {
     expires: new Date(Date.now() + ONE_HOUR_MS),
@@ -44,11 +40,7 @@ async function protect(req, res, next) {
   let decodedToken = null;
   try {
     if (await isBlackListedToken(token)) {
-      sendResponse(
-        res,
-        400,
-        "You have logged out from the session. Log in again to continue."
-      );
+      sendResponse(res, 400, "You have logged out from the session. Log in again to continue.");
       return;
     }
 
@@ -69,30 +61,10 @@ async function protect(req, res, next) {
     return;
   } else {
     req.userEmail = userEmail;
-
+    req.role = decodedToken.role;
     next();
   }
 }
-/*****************************************************************************/
-
-function authorize(permitedRoles) {
-  return (req, res, next) => {
-    const token = extractToken(req);
-    const decodedToken = decodeToken(token);
-    const role = decodedToken.role;
-
-    if (!permitedRoles.includes(role)) {
-      sendResponse(
-        res,
-        403,
-        `Only ${permitedRoles.map((role) => String(role)).join(", ")} are permitted to this operation`
-      );
-      return;
-    }
-    next();
-  };
-}
-
 /*****************************************************************************/
 
 async function blacklistToken(req, res, next) {
@@ -124,10 +96,7 @@ function decodeToken(token) {
 function extractToken(req) {
   if (req.cookies && req.cookies.jwt) {
     return req.cookies.jwt;
-  } else if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith("Bearer")
-  ) {
+  } else if (req.headers.authorization && req.headers.authorization.startsWith("Bearer")) {
     const authHeader = req.headers.authorization;
 
     return authHeader.split("Bearer")[1].trim();
@@ -150,4 +119,4 @@ function sendResponse(res, resStatus, responseExplanation, dataKey, dataValue) {
 
 /*****************************************************************************/
 
-module.exports = { generateJWT, protect, authorize, blacklistToken };
+module.exports = { generateJWT, protect, blacklistToken };

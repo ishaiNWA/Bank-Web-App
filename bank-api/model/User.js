@@ -24,7 +24,7 @@ const userSchema = new Schema({
   role: {
     type: String,
     enum: Object.values(USER_ROLES),
-    deafult: USER_ROLES.CLIENT,
+    default: USER_ROLES.CLIENT,
   },
   balance: {
     type: Number,
