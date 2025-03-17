@@ -9,6 +9,8 @@ const {
   findManagerInvitationByEmail,
   executeWithTransaction,
   deleteManagerInvitationByEmail,
+  createAccount,
+  addAccountToUser,
 } = require("../services/db-service");
 
 const sendMail = require("../services/mail-service");
@@ -166,13 +168,23 @@ async function verifyConfirmationPassword(req, res, next) {
 
 async function registerUser(req, res, next) {
   try {
-    await createUser({
-      name: req.pendingUser.name,
-      email: req.pendingUser.userEmail,
-      hashedPassword: req.pendingUser.userHashedPassword,
-    });
+    executeWithTransaction(async (session) => {
+      const userDoc = await createUser(
+        {
+          name: req.pendingUser.name,
+          email: req.pendingUser.userEmail,
+          hashedPassword: req.pendingUser.userHashedPassword,
+        },
+        session
+      );
+      console.log("Created user:", JSON.stringify(userDoc));
+      const accountDoc = await createAccount(userDoc._id, session);
+      console.log("accountDoc:", accountDoc);
+      const userWithAccount = await addAccountToUser(userDoc._id, accountDoc._id, session);
+      console.log("User with account:", JSON.stringify(userWithAccount, null, 2));
 
-    sendResponse(res, 200, "user has been successfully registered", null, null);
+      sendResponse(res, 200, "user has been successfully registered", null, null);
+    });
   } catch (error) {
     console.log(error);
     sendResponse(res, 400, "registration error", "error", error);
@@ -243,13 +255,11 @@ async function inviteManagerMember(req, res, next) {
     sendResponse(res, 500, "internal error", "error", error);
   }
 
-  req.code = generatedToken;
-
   const mailOptions = {
     to: req.body.userEmail,
     subject: "manager invitation code",
     text: `Please send your email along with this code to http://${getServerIP()}:${process.env.PORT || 3000}/api/connection/register-manager
-Your code is: ${req.code}
+Your code is: ${generatedToken}
 Thank you for registering with our service.`,
   };
 

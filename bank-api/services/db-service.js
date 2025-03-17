@@ -4,6 +4,8 @@ const PendingUser = require("../model/PendingUsers");
 const Transaction = require("../model/Transactions");
 const BlackListedToken = require("../model/BlackListedToken");
 const ManagerInvitation = require("../model/ManagerInvitation");
+const Account = require("../model/Account");
+const { json } = require("body-parser");
 
 /*****************************************************************************/
 
@@ -41,21 +43,14 @@ async function findUserByEmail(email) {
 /*****************************************************************************/
 
 async function findUserBalance(email) {
-  const userBalance = await User.findOne(
-    { email: email },
-    { balance: 1, _id: 0 }
-  );
+  const userBalance = await User.findOne({ email: email }, { balance: 1, _id: 0 });
   return userBalance.balance;
 }
 
 /*****************************************************************************/
 
 async function addToRecipient(recipientEmail, amount, session = null) {
-  await User.updateOne(
-    { email: recipientEmail },
-    { $inc: { balance: amount } },
-    { session }
-  );
+  await User.updateOne({ email: recipientEmail }, { $inc: { balance: amount } }, { session });
 }
 /*****************************************************************************/
 
@@ -86,7 +81,8 @@ async function deleteManagerInvitationByEmail(email, session = null) {
 /*****************************************************************************/
 
 async function createUser(userObj, session = null) {
-  return await User.create([userObj], { session });
+  return await User.create([userObj], { session }).then((usersArray) => usersArray[0]); // as a document with session created as an array,
+  //returning only the first index
 }
 /*****************************************************************************/
 
@@ -107,10 +103,7 @@ async function createPendingUser(pendingUserObj, session = null) {
 }
 /*****************************************************************************/
 
-async function findAndDeletePendingUser(
-  confirmationPassword,
-  minSubmitionTime
-) {
+async function findAndDeletePendingUser(confirmationPassword, minSubmitionTime) {
   return await PendingUser.findOneAndDelete({
     confirmationPassword: confirmationPassword,
     submissionTime: { $gte: minSubmitionTime },
@@ -153,12 +146,7 @@ async function findUsersTransactions(email, offset, limit = null) {
 
 /*****************************************************************************/
 
-async function registerTransaction(
-  userEmail,
-  recipientEmail,
-  amount,
-  session = null
-) {
+async function registerTransaction(userEmail, recipientEmail, amount, session = null) {
   const transactionObjs = await Transaction.create(
     [
       {
@@ -172,21 +160,11 @@ async function registerTransaction(
   );
 
   const transactionObj = transactionObjs[0];
-  await indexTransaction(
-    transactionObj._id,
-    userEmail,
-    recipientEmail,
-    session
-  );
+  await indexTransaction(transactionObj._id, userEmail, recipientEmail, session);
 }
 /*****************************************************************************/
 
-async function indexTransaction(
-  transactionId,
-  senderEmail,
-  recipientEmail,
-  session
-) {
+async function indexTransaction(transactionId, senderEmail, recipientEmail, session) {
   const res = await User.updateMany(
     { email: { $in: [senderEmail, recipientEmail] } },
     {
@@ -211,6 +189,29 @@ async function findManagerInvitationByEmail(email) {
 }
 /*****************************************************************************/
 
+async function createAccount(userObjectId, session = null) {
+  return await Account.create(
+    [
+      {
+        accountHolder: userObjectId,
+      },
+    ],
+    { session }
+  ).then((accountArray) => accountArray[0]); // as a document with session created as an array,
+  //returning only the first index
+}
+
+/*****************************************************************************/
+
+async function addAccountToUser(userObjectId, accountObjectId, session = null) {
+  return await User.findOneAndUpdate(
+    { _id: userObjectId },
+    { $set: { account: accountObjectId } },
+    { new: true, session, runValidators: true }
+  );
+}
+
+/*****************************************************************************/
 module.exports = {
   mongoose,
   connectToDB,
@@ -230,4 +231,6 @@ module.exports = {
   findUserBalance,
   executeWithTransaction,
   deleteManagerInvitationByEmail,
+  createAccount,
+  addAccountToUser,
 };

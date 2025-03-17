@@ -14,7 +14,6 @@ router.post(
 
 router.post(
   "/register-manager",
-  connectionController.validateRegistrationDetails,
   connectionController.validateManagerInvitation,
   connectionController.registerManager
 );

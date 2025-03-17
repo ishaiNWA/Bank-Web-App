@@ -1,7 +1,7 @@
 //import mongoose from 'mongoose';
 const mongoose = require("mongoose");
 const USER_ROLES = require("../constants/roles");
-const ONE_HOUR_MS = 60 * 60 * 1000;
+const ONE_HOUR_IN_SEC = 60 * 60;
 
 const { Schema, model } = mongoose;
 
@@ -30,7 +30,7 @@ const managerInvitationSchema = new Schema({
   createdAt: {
     type: Date,
     default: Date.now,
-    expires: process.env.MANAGER_INVITATION_EXP_TIME || ONE_HOUR_MS,
+    expires: process.env.MANAGER_INVITATION_EXP_TIME || ONE_HOUR_IN_SEC,
   },
 });
 
