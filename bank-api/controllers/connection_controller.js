@@ -9,13 +9,44 @@ const {
   findManagerInvitationByEmail,
   executeWithTransaction,
   deleteManagerInvitationByEmail,
+  createAccount,
+  addAccountToUser,
 } = require("../services/db-service");
-
 const sendMail = require("../services/mail-service");
 const getServerIP = require("../services/os-service");
-const USER_ROLES = require("../constants/roles");
 const bcrypt = require("bcrypt");
 const validator = require("email-validator");
+const validation = require("../helpers/validation-helper");
+const USER_ROLES = require("../constants/roles");
+const REGISTRATION_STATUS = require("../constants/registration-status");
+const mailmessages = require("../constants/mail-messages");
+
+/*****************************************************************************/
+
+async function credentialsValidationManager(credentialsObj, registrationStatus) {
+  try {
+    if (registrationStatus === REGISTRATION_STATUS.MANAGER_INVITATION) {
+      const { userName, userEmail } = credentialsObj;
+      validation.isValidEmailFormat(userEmail);
+      validation.isValidName(userName);
+      await validation.isUniqueUserName(userEmail);
+
+    } else if (registrationStatus === REGISTRATION_STATUS.MANAGER_CONFIRMATION) {
+      const password = credentialsObj.password;
+      validation.isValidPasswordFormat(password);
+
+    } else if (registrationStatus === REGISTRATION_STATUS.CLIENT_REGISTRATION) {
+      const { userName, userEmail, password } = credentialsObj;
+      validation.isValidEmailFormat(userEmail);
+      validation.isValidName(userName);
+      await validation.isUniqueUserName(userEmail);
+      validation.isValidPasswordFormat(password);
+    }
+  } catch (error) {
+    throw error; //rethrow error...
+    //  sendResponse(res, 400, error.message, null, null);
+  }
+}
 
 /*****************************************************************************/
 
@@ -30,7 +61,7 @@ async function validateRegistrationDetails(req, res, next) {
   }
 
   try {
-    if (await isUserNameExisted(userEmail)) {
+    if (await isUniqueUserName(userEmail)) {
       sendResponse(res, 400, "email address already existed in system", null, null);
       return;
     }
@@ -60,7 +91,7 @@ function validateUserInputsFormat(password, userEmail, name = null) {
 }
 /*****************************************************************************/
 
-async function isUserNameExisted(userEmail) {
+async function isUniqueUserName(userEmail) {
   return !!(await findUserByEmail(userEmail));
 }
 
@@ -80,12 +111,47 @@ function isValidPasswordFormat(password) {
 /*****************************************************************************/
 
 async function registerPendingUser(req, res, next) {
-  let session;
-  let generatedPassword;
+
+  req.registrationRole = req.registrationRole === USER_ROLES.MANAGER? USER_ROLES.MANAGER : USER_ROLES.CLIENT;
+  
+  console.log(`req.body.userName is : ${req.body.userName}`)
+
   try {
-    generatedPassword = Math.random().toString(36).slice(-8);
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await hashingThePassword(req.body.password, salt);
+    if (req.registrationRole === USER_ROLES.CLIENT) {
+      // client registration validation
+      credentialsValidationManager(
+        { userName: req.body.userName,
+          userEmail: req.body.userEmail,
+          password: req.body.password }, 
+        REGISTRATION_STATUS.CLIENT_REGISTRATION
+      );
+    }
+    else if(req.registrationRole === USER_ROLES.MANAGER){
+      credentialsValidationManager(
+        {
+          userName: req.body.userName,
+          userEmail: req.body.userEmail,
+        },
+        REGISTRATION_STATUS.MANAGER_INVITATION
+      )
+    }
+  } catch (error) {
+    sendResponse(res, 400, error.message, null, null);
+    return;
+  }
+
+  let session;
+  let confirmationCode;
+  try {
+
+    let userHashedPassword  
+    if (req.registrationRole === USER_ROLES.CLIENT){
+      //extracting password for a CLIENT-role user
+      const salt = await bcrypt.genSalt(10);
+      userHashedPassword = await hashingThePassword(req.body.password, salt);
+    }
+    //registration code to be sent to  ANY user
+    confirmationCode = Math.random().toString(36).slice(-8);
 
     session = await mongoose.startSession();
     await session.withTransaction(async () => {
@@ -93,14 +159,19 @@ async function registerPendingUser(req, res, next) {
 
       await createPendingUser(
         {
-          name: req.body.name,
-          confirmationPassword: generatedPassword,
+          name: req.body.userName,
+          confirmationCode: confirmationCode,
           userEmail: req.body.userEmail,
-          userHashedPassword: hashedPassword,
+          userHashedPassword: userHashedPassword,
+          role : req.registrationRole
         },
         session
       );
     });
+
+    req.confirmationCode = confirmationCode;
+    next();
+
   } catch (error) {
     console.log(error);
     sendResponse(res, 500, "internal error", "error", error);
@@ -111,14 +182,18 @@ async function registerPendingUser(req, res, next) {
     }
   }
 
-  req.code = generatedPassword;
+}
+
+/*****************************************************************************/
+
+async function sendRegConfirmationMail(req, res, next){
+
+  const{confirmationCode, userRole} = req;
 
   const mailOptions = {
     to: req.body.userEmail,
     subject: "user register confirmation code",
-    text: `Please send this code to http://${getServerIP()}:${process.env.PORT}/api/connection/register-confirmation
-Your code is: ${req.code}
-Thank you for registering with our service.`,
+    text: mailmessages.getConfirmationMsg(confirmationCode ,userRole),
   };
 
   sendMail(
@@ -136,27 +211,31 @@ Thank you for registering with our service.`,
 
 /*****************************************************************************/
 
-async function verifyConfirmationPassword(req, res, next) {
+async function verifyConfirmationCode(req, res, next) {
+
   let status;
   let statusExplanation;
   const minSubmitionTime = new Date(Date.now() - 60 * 15 * 1000); //ten minuts limit
   try {
-    const validPendingUser = await findAndDeletePendingUser(
-      req.body.confirmationPassword,
+    const pendingUserDoc = await findAndDeletePendingUser(
+      req.body.confirmationCode,
       minSubmitionTime
     );
 
-    if (!validPendingUser) {
+    if (!pendingUserDoc || pendingUserDoc.role !== req.registerConfirmationMode ) {
       status = 400;
       statusExplanation =
-        "no matching confirmation password or pendig state has expired." +
-        " check if correct password was inserted, or register again and confirm password within " +
-        " the 10 minuts limit";
+      "No matching confirmation password or pending state has expired." +
+      " Check if correct password was inserted, or you might be using the wrong registration URL/route for your account type." +
+      " Please ensure you're using the correct registration link for your role, or register again and confirm password within" +
+      " the 10 minutes limit";
       sendResponse(res, status, statusExplanation, null, null);
-    } else {
-      req.pendingUser = validPendingUser;
-      next();
+      return;
     }
+    
+      req.pendingUser = pendingUserDoc;
+      next();
+    
   } catch (error) {
     sendResponse(res, 500, "internal error", "error", error);
   }
@@ -164,15 +243,41 @@ async function verifyConfirmationPassword(req, res, next) {
 
 /*****************************************************************************/
 
-async function registerUser(req, res, next) {
-  try {
-    await createUser({
-      name: req.pendingUser.name,
-      email: req.pendingUser.userEmail,
-      hashedPassword: req.pendingUser.userHashedPassword,
-    });
+async function ensureManagerPassword(req, res, next){
+  try{
+     await credentialsValidationManager({password : req.body.password}, REGISTRATION_STATUS.MANAGER_CONFIRMATION)
+  } catch (error) {
+    return sendResponse(res, 400, error.message, null, null);  
+  }
+    
+    next();
+  }
+/*****************************************************************************/
 
-    sendResponse(res, 200, "user has been successfully registered", null, null);
+async function registerUser(req, res, next) {
+
+  const{name , userEmail, userHashedPassword, role} = req.pendingUser
+  try {
+    executeWithTransaction(async (session) => {
+      const userDoc = await createUser(
+        {
+          name: name,
+          email: userEmail,
+          hashedPassword: userHashedPassword,
+          role: role
+        },
+        session
+      );
+      console.log("Created user:", JSON.stringify(userDoc));
+      if(role === USER_ROLES.CLIENT){
+        const accountDoc = await createAccount(userDoc._id, session);
+        console.log("accountDoc:", accountDoc);
+        const userWithAccount = await addAccountToUser(userDoc._id, accountDoc._id, session);
+        console.log("User with account:", JSON.stringify(userWithAccount, null, 2));
+      }
+
+      sendResponse(res, 200, "user has been successfully registered", null, null);
+    });
   } catch (error) {
     console.log(error);
     sendResponse(res, 400, "registration error", "error", error);
@@ -243,14 +348,10 @@ async function inviteManagerMember(req, res, next) {
     sendResponse(res, 500, "internal error", "error", error);
   }
 
-  req.code = generatedToken;
-
   const mailOptions = {
     to: req.body.userEmail,
     subject: "manager invitation code",
-    text: `Please send your email along with this code to http://${getServerIP()}:${process.env.PORT || 3000}/api/connection/register-manager
-Your code is: ${req.code}
-Thank you for registering with our service.`,
+    text: MA
   };
 
   sendMail(
@@ -316,6 +417,27 @@ async function registerManager(req, res, next) {
 }
 
 /*****************************************************************************/
+function setManagerConfirmationMode(req, res, next){
+  req.registerConfirmationMode = USER_ROLES.MANAGER
+  next();
+}
+
+/*****************************************************************************/
+function setClientConfirmationMode(req, res, next){
+  req.registerConfirmationMode = USER_ROLES.CLIENT
+  next();
+}
+
+/*****************************************************************************/
+
+async function addPasswordToPendingManagerDoc(req, res, next){
+  const salt = await bcrypt.genSalt(10);
+  req.pendingUser.userHashedPassword = await hashingThePassword(req.body.password, salt);
+  next();
+  
+}
+/*****************************************************************************/
+
 function sendResponse(res, resStatus, responseExplanation, dataKey, dataValue) {
   const responseBody = {
     explanation: responseExplanation,
@@ -328,13 +450,20 @@ function sendResponse(res, resStatus, responseExplanation, dataKey, dataValue) {
 
 /*****************************************************************************/
 
+
+
 module.exports = {
   validateRegistrationDetails,
   registerPendingUser,
-  verifyConfirmationPassword,
+  verifyConfirmationCode,
   registerUser,
   verifyLoginCredentials,
   inviteManagerMember,
   validateManagerInvitation,
   registerManager,
+  ensureManagerPassword,
+  sendRegConfirmationMail,
+  setManagerConfirmationMode,
+  setClientConfirmationMode,
+  addPasswordToPendingManagerDoc
 };

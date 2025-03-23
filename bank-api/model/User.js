@@ -26,16 +26,10 @@ const userSchema = new Schema({
     enum: Object.values(USER_ROLES),
     default: USER_ROLES.CLIENT,
   },
-  balance: {
-    type: Number,
-    default: 1000,
+  account: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Account",
   },
-  recentTransactions: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Transaction",
-    },
-  ],
 });
 
 // Create a model using the schema

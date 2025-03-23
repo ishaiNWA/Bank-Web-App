@@ -8,7 +8,7 @@ const router = express.Router();
 router.get(
   "/balance",
   jwt.protect,
-  accessControl.applyFunctionAccessControl,
+  accessControl.applyGetFunctionAccessControl,
   accountManagingContoller.getBalance
 );
 
@@ -17,7 +17,7 @@ router.post("/transaction", jwt.protect, accountManagingContoller.performTransac
 router.get(
   "/transactions",
   jwt.protect,
-  accessControl.applyFunctionAccessControl,
+  accessControl.applyGetFunctionAccessControl,
   accountManagingContoller.validatePaginationParams,
   accountManagingContoller.getTransactions
 );

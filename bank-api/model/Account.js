@@ -1,9 +1,10 @@
 const mongoose = require("mongoose");
 const { Schema, model } = mongoose;
 
-accountSchema = new Schema({
+const accountSchema = new Schema({
   accountHolder: {
     type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
     required: true,
   },
   balance: {
@@ -18,6 +19,6 @@ accountSchema = new Schema({
   ],
 });
 
-const account = model("Acount", accountSchema);
+const account = model("Account", accountSchema);
 
 module.exports = account;

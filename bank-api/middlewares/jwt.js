@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
-const ONE_HOUR_MS = 60 * 60 * 1000;
+const ONE_DAY_IN_SECONDS = 60 * 60 * 24;
+const ONE_DAY_IN_MS = ONE_DAY_IN_SECONDS * 1000;
 
 const {
   createBlackListedToken,
@@ -12,11 +13,11 @@ const {
 function generateJWT(req, res, next) {
   const email = req.body.userEmail;
   const role = req.extractedRole;
-  const jwtOptions = { expiresIn: ONE_HOUR_MS };
+  const jwtOptions = { expiresIn: ONE_DAY_IN_SECONDS };
   const token = jwt.sign({ email, role }, process.env.ACCESS_TOKEN_SECRET, jwtOptions);
 
   const cookieOptions = {
-    expires: new Date(Date.now() + ONE_HOUR_MS),
+    expires: new Date(Date.now() + ONE_DAY_IN_MS),
     httpOnly: true,
   };
   res.cookie("jwt", token, cookieOptions);

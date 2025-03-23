@@ -9,27 +9,32 @@ router.post(
   "/invite-manager",
   jwt.protect,
   accessControl.authorize(USER_ROLES.ADMIN),
-  connectionController.inviteManagerMember
-);
-
-router.post(
-  "/register-manager",
-  connectionController.validateRegistrationDetails,
-  connectionController.validateManagerInvitation,
-  connectionController.registerManager
+  accessControl.setManagerRegistrationRole,
+  connectionController.registerPendingUser,
+  connectionController.sendRegConfirmationMail
 );
 
 router.post(
   "/register",
-  connectionController.validateRegistrationDetails,
-  connectionController.registerPendingUser
+  connectionController.registerPendingUser,
+  connectionController.sendRegConfirmationMail
 );
 
 router.post(
-  "/register-confirmation",
-  connectionController.verifyConfirmationPassword,
+  "/client-register-confirmation",
+  connectionController.setClientConfirmationMode,
+  connectionController.verifyConfirmationCode,
   connectionController.registerUser
 );
+
+router.post(
+  "/manager-register-confirmation",
+  connectionController.setManagerConfirmationMode,
+  connectionController.ensureManagerPassword ,
+  connectionController.verifyConfirmationCode,
+  connectionController.addPasswordToPendingManagerDoc,
+  connectionController.registerUser
+)
 
 router.post("/login", connectionController.verifyLoginCredentials, jwt.generateJWT);
 
