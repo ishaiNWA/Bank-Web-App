@@ -89,13 +89,7 @@ async function createUser(userObj, session = null) {
 async function createPendingUser(pendingUserObj, session = null) {
   await PendingUser.create(
     [
-      {
-        name: pendingUserObj.name,
-        confirmationPassword: pendingUserObj.confirmationPassword,
-        userEmail: pendingUserObj.userEmail,
-        userHashedPassword: pendingUserObj.userHashedPassword,
-        salt: pendingUserObj.salt,
-      },
+      pendingUserObj,
     ],
 
     { session }
@@ -103,9 +97,9 @@ async function createPendingUser(pendingUserObj, session = null) {
 }
 /*****************************************************************************/
 
-async function findAndDeletePendingUser(confirmationPassword, minSubmitionTime) {
+async function findAndDeletePendingUser(confirmationCode, minSubmitionTime) {
   return await PendingUser.findOneAndDelete({
-    confirmationPassword: confirmationPassword,
+    confirmationCode: confirmationCode,
     submissionTime: { $gte: minSubmitionTime },
   });
 }

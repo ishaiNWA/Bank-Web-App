@@ -18,7 +18,7 @@ function authorize(permitedRoles) {
 
 /*****************************************************************************/
 
-function applyFunctionAccessControl(req, res, next) {
+function applyGetFunctionAccessControl(req, res, next) {
   if (req.role === USER_ROLES.ADMIN || req.role === USER_ROLES.MANAGER) {
     req.targetUserEmail = req.query.targetUser;
   } else {
@@ -27,7 +27,15 @@ function applyFunctionAccessControl(req, res, next) {
   next();
 }
 
+/*****************************************************************************/
+
+function setManagerRegistrationRole(req, res, next) {
+  req.registrationRole = USER_ROLES.MANAGER;
+  next();
+}
+/*****************************************************************************/
 module.exports = {
   authorize,
-  applyFunctionAccessControl,
+  applyGetFunctionAccessControl,
+  setManagerRegistrationRole,
 };

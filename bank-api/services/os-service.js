@@ -16,4 +16,4 @@ function getServerIP() {
   return "127.0.0.1";
 }
 
-module.exports = getServerIP;
+module.exports = {getServerIP};
