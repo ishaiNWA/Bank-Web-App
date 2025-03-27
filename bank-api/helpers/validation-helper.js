@@ -3,23 +3,6 @@ const validator = require("email-validator");
 
 /*****************************************************************************/
 
-function validateUserInputsFormat(password, userEmail, name = null) {
-  if (!password || !isValidPasswordFormat(password)) {
-    throw new Error("invalid password format");
-    return;
-  }
-  if (!userEmail || !validator.validate(userEmail)) {
-    throw new Error("invalid email format");
-  }
-  if (name) {
-    if (!isValidName(name)) {
-      throw new Error("name should be 1-20 only upper/lower case letters");
-      return;
-    }
-  }
-}
-/*****************************************************************************/
-
 async function isUniqueUserName(userEmail) {
   if (await dbClient.findUserByEmail(userEmail)) {
     throw new Error(

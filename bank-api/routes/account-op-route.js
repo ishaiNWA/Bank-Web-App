@@ -1,7 +1,7 @@
 const express = require("express");
 const jwt = require("../middlewares/jwt");
 const accessControl = require("../middlewares/access-control");
-const accountManagingContoller = require("../controllers/account_managing_controller");
+const accountManagingContoller = require("../controllers/account-op-controller");
 
 const router = express.Router();
 
@@ -12,7 +12,10 @@ router.get(
   accountManagingContoller.getBalance
 );
 
-router.post("/transaction", jwt.protect, accountManagingContoller.performTransaction);
+router.post("/transaction",
+   jwt.protect,
+   accountManagingContoller.enssurValidTransactionConditions,
+   accountManagingContoller.performTransaction);
 
 router.get(
   "/transactions",

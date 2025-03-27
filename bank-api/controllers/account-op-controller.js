@@ -1,3 +1,4 @@
+const BadQueryError = require("../errors/BadQueryError");
 const {
   mongoose,
   findUsersTransactions,
@@ -15,7 +16,11 @@ async function getBalance(req, res, next) {
   try {
     usersBalance = await findUserBalance(req.targetUserEmail);
   } catch (error) {
-    sendResponse(res, 500, "internal error", "error", error.message);
+    if (error instanceof BadQueryError) {
+      sendResponse(res, 400, "unfound balance", "error", error.message);
+    }else{
+      sendResponse(res, 500, "internal error", "error", error.message);
+    }
     return;
   }
   sendResponse(res, 200, "successfully found user's balance", "balance", usersBalance);
@@ -57,7 +62,12 @@ async function getTransactions(req, res, next) {
   try {
     transactions = await findUsersTransactions(req.targetUserEmail, offset, limit);
   } catch (error) {
-    sendResponse(res, 500, "internal error", "error", error.message);
+    if (error instanceof BadQueryError) {
+      sendResponse(res, 400, "unfound balance", "error", error.message);
+    }else{
+      sendResponse(res, 500, "internal error", "error", error.message);
+    }
+   
     return;
   }
 
@@ -66,9 +76,8 @@ async function getTransactions(req, res, next) {
 
 /*****************************************************************************/
 
-async function performTransaction(req, res, next) {
-  let session;
-  let updatedSenderBalance;
+async function enssurValidTransactionConditions(req, res, next){
+
   let { recipientEmail, amount } = req.body;
   const userEmail = req.userEmail;
 
@@ -89,7 +98,24 @@ async function performTransaction(req, res, next) {
       sendResponse(res, 404, "invalid recipient", null, null);
       return;
     }
+}catch (error) {
+  if (error instanceof BadQueryError) {
+    sendResponse(res, 400, "unfound balance", "error", error.message);
+  }else{
+    sendResponse(res, 500, "internal error", "error", error.message);
+  }
+  return;
+}
+  next();
+}
+/*****************************************************************************/
+async function performTransaction(req, res, next) {
+  let session;
+  let updatedSenderBalance;
+  let { recipientEmail, amount } = req.body;
+  const userEmail = req.userEmail;
 
+  try {
     session = await mongoose.startSession();
     await session.withTransaction(async () => {
       await addToRecipient(recipientEmail, amount, session);
@@ -115,17 +141,14 @@ async function performTransaction(req, res, next) {
 function validateTransactionInputs(amount, recipientEmail) {
   if (!Number.isInteger(Number(amount))) {
     throw new Error("amount must be integers");
-    return;
   }
 
   if (amount <= 0) {
     throw new Error("the transaction amount must be positive value");
-    return;
   }
 
   if (!recipientEmail || !validator.validate(recipientEmail)) {
     throw new Error("invalid email format");
-    return;
   }
 }
 /*****************************************************************************/
@@ -160,4 +183,5 @@ module.exports = {
   validatePaginationParams,
   getTransactions,
   performTransaction,
+  enssurValidTransactionConditions,
 };

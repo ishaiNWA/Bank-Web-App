@@ -6,6 +6,7 @@ const BlackListedToken = require("../model/BlackListedToken");
 const ManagerInvitation = require("../model/ManagerInvitation");
 const Account = require("../model/Account");
 const { json } = require("body-parser");
+const BadQueryError = require("../errors/BadQueryError")
 
 /*****************************************************************************/
 
@@ -42,26 +43,47 @@ async function findUserByEmail(email) {
 }
 /*****************************************************************************/
 
-async function findUserBalance(email) {
-  const userBalance = await User.findOne({ email: email }, { balance: 1, _id: 0 });
-  return userBalance.balance;
-}
+// async function findUserBalance(email) {
+//   const userBalance = await User.findOne({ email: email }, { balance: 1, _id: 0 });
+//   return userBalance.balance;
+// }
 
 /*****************************************************************************/
 
+async function findUserBalance(email){
+   const userDoc = await User.findOne({email : email}).populate(`account`);
+
+   if(!userDoc){
+    throw new BadQueryError(`the  user: ${email} was not found in system`)
+   };
+   if(!userDoc.account){
+    throw new BadQueryError(`no account for ${email} user.`);
+   }
+
+   return userDoc.account.balance;
+}
+/*****************************************************************************/
+
 async function addToRecipient(recipientEmail, amount, session = null) {
-  await User.updateOne({ email: recipientEmail }, { $inc: { balance: amount } }, { session });
+  const userDoc = await User.findOne({ email: recipientEmail });
+  await Account.findOneAndUpdate({_id: userDoc.account},
+  {$inc: { balance: amount } },
+  {  new: true, session }
+  )
 }
 /*****************************************************************************/
 
 async function subtractFromSender(userEmail, amount, session = null) {
-  const userBalance = await User.findOneAndUpdate(
-    { email: userEmail },
+  
+  const userDoc = await User.findOne({ email: userEmail });
+
+  const updatedAccount = await Account.findOneAndUpdate(
+    { _id: userDoc.account },
     { $inc: { balance: -amount } },
-    { new: true, select: "balance", session }
+    { new: true, session }
   );
 
-  return userBalance.balance;
+  return updatedAccount.balance;
 }
 /*****************************************************************************/
 
@@ -119,23 +141,26 @@ async function isBlackListedToken(token) {
 /*****************************************************************************/
 
 async function findUsersTransactions(email, offset, limit = null) {
-  const userObj = await User.findOne({ email: email })
-    .select("recentTransactions")
-    .populate({
-      path: "recentTransactions",
+  const userDoc = await User.findOne({ email: email }).populate({
+    path :`account`,
+    populate: {
+      path: `recentTransactions`,
       options: {
         sort: { _id: -1 },
         skip: offset,
         limit: limit,
-      },
-    })
-    .lean();
+      }
+    }
+  });
 
-  if (!userObj) {
-    throw new Error("User not found");
-  }
+  if(!userDoc){
+    throw new BadQueryError(`the  user: ${email} was not found in system`)
+   };
+   if(!userDoc.account){
+    throw new BadQueryError(`no account for ${email} user.`);
+   }
 
-  return userObj.recentTransactions;
+  return userDoc.account.recentTransactions;
 }
 
 /*****************************************************************************/
@@ -153,14 +178,17 @@ async function registerTransaction(userEmail, recipientEmail, amount, session = 
     { session }
   );
 
+  const senderAccountId = await findUserAccountId(userEmail)
+  const recipientAccountId = await findUserAccountId(recipientEmail);
+
   const transactionObj = transactionObjs[0];
-  await indexTransaction(transactionObj._id, userEmail, recipientEmail, session);
+  await indexTransaction(transactionObj._id, senderAccountId, recipientAccountId, session);
 }
 /*****************************************************************************/
 
-async function indexTransaction(transactionId, senderEmail, recipientEmail, session) {
-  const res = await User.updateMany(
-    { email: { $in: [senderEmail, recipientEmail] } },
+async function indexTransaction(transactionId, senderAccountId, recipientAccountId, session) {
+  const res = await Account.updateMany(
+    { _id: { $in: [senderAccountId, recipientAccountId] } },
     {
       $push: {
         recentTransactions: transactionId,
@@ -206,6 +234,22 @@ async function addAccountToUser(userObjectId, accountObjectId, session = null) {
 }
 
 /*****************************************************************************/
+
+async function extractPropertyFromDoc(modelName , docUniqueIdentifierObj, property ){
+ const result = await mongooseModel.findOne(docUniqueIdentifierObj,{[property] : 1} );
+return result
+}
+/*****************************************************************************/
+
+async function findUserAccountId(email){
+  const userDoc = await User.findOne({email : email});
+  if (!userDoc){
+    throw new BadQueryError("unfound user");
+  }
+  return userDoc.account;
+}
+
+
 module.exports = {
   mongoose,
   connectToDB,

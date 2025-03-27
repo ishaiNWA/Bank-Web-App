@@ -18,5 +18,6 @@ const blackListedTokensSchema = new Schema({
 });
 
 const BlackListedToken = model("BlackListedToken", blackListedTokensSchema);
+oken = model("BlackListedToken", blackListedTokensSchema);
 
 module.exports = BlackListedToken;

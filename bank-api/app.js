@@ -5,7 +5,7 @@ const path = require("path");
 const cookieParser = require("cookie-parser");
 const morganLogger = require("morgan");
 const connectionRouter = require("./routes/connection-route");
-const accountManagingRouter = require("./routes/account_managing");
+const accountOpRouter = require("./routes/account-op-route");
 const cors = require("cors");
 const dbClient = require("./services/db-service");
 const app = express();
@@ -29,7 +29,7 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use(cors()); // Enable Cross-Origin Resource Sharing (CORS) for all routes
 
 app.use("/api/connection", connectionRouter);
-app.use("/api/account_managing", accountManagingRouter);
+app.use("/api/account_managing", accountOpRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
