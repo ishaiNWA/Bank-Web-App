@@ -35,13 +35,13 @@ function generateJWT(req, res, next) {
 async function protect(req, res, next) {
   const token = extractToken(req);
   if (null == token) {
-    sendResponse(res, 400, "unauthorized request");
+    sendResponse(res, 401, "unauthorized request");
     return;
   }
   let decodedToken = null;
   try {
     if (await isBlackListedToken(token)) {
-      sendResponse(res, 400, "You have logged out from the session. Log in again to continue.");
+      sendResponse(res, 401, "You have logged out from the session. Log in again to continue.");
       return;
     }
 
@@ -58,9 +58,10 @@ async function protect(req, res, next) {
   const userEmail = decodedToken.email;
 
   if (!(await findUserByEmail(userEmail))) {
-    sendResponse(res, 400, "user was not found");
+    sendResponse(res, 404, "user was not found");
     return;
   } else {
+    req.token = token;
     req.userEmail = userEmail;
     req.role = decodedToken.role;
     next();
@@ -69,16 +70,13 @@ async function protect(req, res, next) {
 /*****************************************************************************/
 
 async function blacklistToken(req, res, next) {
-  const token = extractToken(req);
-  if (null == token) {
-    sendResponse(res, 400, "unauthorized request");
-    return;
-  }
+  const token = req.token;
+
   try {
     await createBlackListedToken(token);
   } catch (error) {
     console.log(error);
-    sendResponse(res, 400, error);
+    sendResponse(res, 500, "Internal error while trying to save BlackListToken to db");
     return;
   }
 

@@ -5,17 +5,18 @@ var connectionController = require("../controllers/connection_controller");
 const USER_ROLES = require("../constants/roles");
 var router = express.Router();
 
+
 router.post(
-  "/invite-manager",
-  jwt.protect,
-  accessControl.authorize(USER_ROLES.ADMIN),
-  accessControl.setManagerRegistrationRole,
+  "/register",
   connectionController.registerPendingUser,
   connectionController.sendRegConfirmationMail
 );
 
 router.post(
-  "/register",
+  "/invite-manager",
+  jwt.protect,
+  accessControl.authorize(USER_ROLES.ADMIN, USER_ROLES.MANAGER),
+  accessControl.setManagerRegistrationRole,
   connectionController.registerPendingUser,
   connectionController.sendRegConfirmationMail
 );

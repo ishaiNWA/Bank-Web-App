@@ -8,6 +8,8 @@ const connectionRouter = require("./routes/connection-route");
 const accountOpRouter = require("./routes/account-op-route");
 const cors = require("cors");
 const dbClient = require("./services/db-service");
+
+
 const app = express();
 
 // const errorHandler = require("./middleware/errors"); TODO :: create error handler...
@@ -25,7 +27,6 @@ app.use(express.json()); // Parse JSON payloads in request bodies
 app.use(express.urlencoded({ extended: false })); // Parse URL-encoded bodies (as sent by HTML forms)
 app.use(cookieParser()); // Parse Cookie header and populate req.cookies
 app.use(express.static(path.join(__dirname, "public")));
-
 app.use(cors()); // Enable Cross-Origin Resource Sharing (CORS) for all routes
 
 app.use("/api/connection", connectionRouter);

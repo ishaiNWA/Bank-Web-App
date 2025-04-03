@@ -19,7 +19,7 @@ function authorize(permitedRoles) {
 
 /*****************************************************************************/
 
-function applyGetFunctionAccessControl(req, res, next) {
+function roleAccessControl(req, res, next) {
   if (req.role === USER_ROLES.ADMIN || req.role === USER_ROLES.MANAGER) {
     try{
       validation.isValidEmailFormat(req.query.targetUser)
@@ -61,6 +61,6 @@ function sendResponse(res, resStatus, responseExplanation, dataKey = null, dataV
 
 module.exports = {
   authorize,
-  applyGetFunctionAccessControl,
+  roleAccessControl,
   setManagerRegistrationRole,
 };

@@ -114,8 +114,6 @@ async function registerPendingUser(req, res, next) {
 
   req.registrationRole = req.registrationRole === USER_ROLES.MANAGER? USER_ROLES.MANAGER : USER_ROLES.CLIENT;
   
-  console.log(`req.body.userName is : ${req.body.userName}`)
-
   try {
     if (req.registrationRole === USER_ROLES.CLIENT) {
       // client registration validation
@@ -268,19 +266,17 @@ async function registerUser(req, res, next) {
         },
         session
       );
-      console.log("Created user:", JSON.stringify(userDoc));
       if(role === USER_ROLES.CLIENT){
         const accountDoc = await createAccount(userDoc._id, session);
-        console.log("accountDoc:", accountDoc);
-        const userWithAccount = await addAccountToUser(userDoc._id, accountDoc._id, session);
-        console.log("User with account:", JSON.stringify(userWithAccount, null, 2));
+        await addAccountToUser(userDoc._id, accountDoc._id, session);
+
       }
 
       sendResponse(res, 200, "user has been successfully registered", null, null);
     });
   } catch (error) {
     console.log(error);
-    sendResponse(res, 400, "registration error", "error", error);
+    sendResponse(res, 500, "registration error", "error", error);
   }
 }
 

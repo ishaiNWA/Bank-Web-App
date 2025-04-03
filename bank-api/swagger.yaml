@@ -1,0 +1,591 @@
+openapi: 3.0.0 # Swagger version
+info:
+  title: Web Bank App API
+  version: 1.0.0
+  description: API documentation for the Web Bank App
+
+servers:
+  - url: http://localhost:3000  # Your base server URL
+
+paths:
+  /api/connection/register:
+    post:
+      summary: Post a 'client' registration
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:  
+                userName:
+                  type: string
+                  description: "Name should only contain letters and be 1 to 20 characters long."
+                userEmail:
+                  type: string
+                  description: "The user's email, which serves as their unique username in the app. It must follow a valid email format and be unique within the system."
+                password:
+                  type: string
+                  description: >
+                    The user's password must be 5 to 20 characters long and include at least:
+                    - One lowercase letter,
+                    - One uppercase letter,
+                    - One digit,
+                    - One special character from the set: ! @ # $ % ^ & *.
+                    This ensures a strong password policy.
+      responses:
+        '200':
+          description: "Succesfull registration of PendingUser to data base, and a confirmation code has been sent to the user's email. The user must provide this code to complete the registration process."
+        '400':
+          description: "One or more required registration properties were missing or incorrectly formatted."
+        '500':
+          description: "Internal server error while attempting to save the Pending User to the database."
+
+  /api/connection/invite-manager:
+    post:
+      summary: A user can be invited by another `MANAGER` or an `ADMIN` to be registered as a `MANAGER` in the system.
+      tags:
+        - Authentication
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userName:
+                  type: string
+                  description: "Name should only contain letters and be 1 to 20 characters long."
+                userEmail:
+                  type: string
+                  description: "The user's email, which serves as their unique username in the app. It must follow a valid email format and be unique within the system."
+      responses:
+        '200':
+          description: "Successful registration of a manager-PendingUser to the database, and a confirmation code has been sent to the user's email. The user must provide this code to complete the registration process."
+        '400':
+          description: "Bad Request – The request is invalid due to one or more issues."
+          content:
+            application/json:
+              examples:
+                validationError:
+                  summary: Missing or invalid registration properties
+                  value:
+                    error: "One or more required properties are missing or incorrectly formatted."
+        '401':
+          description: "Unauthorized request – The user must be authenticated to access this resource."
+          content:
+            application/json:
+              examples:
+                sessionExpired:
+                  summary: Session expired
+                  value:
+                    error: "You have logged out from the session. Log in again to continue."
+                tokenExpired:
+                  summary: Expired token
+                  value:
+                    error: "TokenExpiredError – Your token has expired. Please log in again to obtain a new token."
+        '403':
+          description: "Forbidden – The user does not have the required permissions to perform this operation."
+          content:
+            application/json:
+              examples:
+                insufficientPermissions:
+                  summary: Insufficient permissions
+                  value:
+                    error: "Only MANAGER, ADMIN are permitted to perform this operation."
+        '404':
+          description: "User not found – The requested user could not be found in the system."
+          content:
+            application/json:
+              examples:
+                userNotFound:
+                  summary: User not found
+                  value:
+                    error: "The user was not found in the system."
+        '500':
+          description: "Internal server error – The system encountered an issue while processing the request."
+          content:
+            application/json:
+              examples:
+                databaseWriteFailure:
+                  summary: Database write failure
+                  value:
+                    error: "Failure to write to the database. Please try again later."
+                emailSendingFailure:
+                  summary: Email sending failure
+                  value:
+                    error: "Mail sending failure – The system encountered an issue while attempting to send an email."
+
+  /api/connection/client-register-confirmation:
+    post:
+      summary: "Complete registration for User with a `CLIENT` roll after initial registration request, and save it database"
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                confirmationCode:
+                  type: string
+                  description: "The confirmation code sent to the user's email."
+      responses:
+        '200':
+          description: "Client registration successfully confirmed."
+        '400':
+          description: >
+            - "The provided confirmation code or password is invalid, or the pending registration state has expired."
+            - "This error may also occur if the request is sent to an incorrect registration route."
+        '500':
+          description: >
+            - "An unexpected error occurred while interacting with the database."
+            - "Registration failed due to an internal server issue."
+
+  /api/connection/manager-register-confirmation:
+    post:
+      summary: "Complete registration for User with a `MANAGER` roll, after they were being invited by an `ADMIN` or `MANAGER`, and then save it database"
+      description: "This endpoint confirms a `MANAGER` invitation , and then save it to data base."
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                confirmationCode:
+                  type: string
+                  description: "The confirmation code sent to the user's email."
+                password:
+                  type: string
+                  description: >
+                    The user's password must be 5 to 20 characters long and include at least:
+                    - One lowercase letter,
+                    - One uppercase letter,
+                    - One digit,
+                    - One special character from the set: ! @ # $ % ^ & *.
+                    This ensures a strong password policy.
+      responses:
+        '200':
+          description: "Manager registration successfully confirmed."
+        '400':
+          description: >
+            - "Invalid confirmation credentials or expired pending registration state."
+            - "This may also indicate a request sent to an incorrect registration route."
+        '500':
+          description: >
+            - "An internal server error occurred during the confirmation process."
+            - "Possible database failure while processing the manager registration."
+
+  /api/connection/login:
+    post:
+      summary: "authenticating a User and opening a session"
+      description: "using JWT to verify the authenticity of a user and determine it's role"
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userEmail:
+                  type: string
+                  description: "The user's email, which serves as their unique username in the app."
+                password: 
+                  type: string
+                  description: "user's password"
+      responses:
+        '200':
+          description: "Login was successful. A JWT token was generated and stored in an HTTP-only cookie."
+        '400':
+          description: >
+            - "Invalid input format for user credentials (email or password)."
+            - "This error is triggered if user inputs fail validation."
+        '401':
+          description: >
+            - "Unauthorized access due to incorrect email or password."
+            - "Occurs if the provided email does not match any registered user, or if the password does not match the stored hashed password."
+        '500':
+          description: >
+            - "An internal server error occurred during the login process."
+            - "Possible failure while interacting with the database or generating authentication data."
+
+  /api/connection/logout:
+    delete:
+      summary: "Logout a user"
+      description: "Terminate a User's session, blacklisting its JWT."
+      tags:
+        - Authentication
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: "Logout complete"
+        '400':
+          description: "Bad request"
+        '401':
+          description: "Unauthorized"
+        '500':
+          description: "Internal server error"
+
+  /api/account_managing/balance:
+    get:
+      summary: "Get total amount of money inside a User's account"
+      description: "Retrieve the current balance of a user's account. Regular users can only access their own account balance, while managers and admins must specify a target user to retrieve balances for any account."
+      parameters:
+        - in: query
+          name: targetUser
+          schema:
+            type: string
+          required: false
+          description: "User ID of the account to retrieve balance for. Required for manager and admin roles, not used for regular users."
+      security:
+        - cookieAuth: []
+      tags:
+        - Account Management
+      responses:
+        '200':
+          description: "Successfully found user's balance"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                  message:
+                    type: string
+                  balance:
+                    type: number
+                    description: "Account balance value"
+        '400':
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                  message:
+                    type: string
+                  error:
+                    type: string
+                oneOf:
+                  - properties:
+                      message:
+                        description: "No target email or invalid email format"
+                  - properties:
+                      message:
+                        description: "Unfound balance"
+        '401':
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                  message:
+                    type: string
+                oneOf:
+                  - properties:
+                      message:
+                        description: "Unauthorized request"
+                  - properties:
+                      message:
+                        description: "You have logged out from the session"
+                  - properties:
+                      message:
+                        description: "Token expired"
+        '404':
+          description: "Not found"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                  message:
+                    type: string
+        '500':
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                  message:
+                    type: string
+                  error:
+                    type: string        
+
+  /api/account_managing/transactions:
+    get:
+      summary: "Get User's transactions history"
+      description: "Retrieve the transactions history of a user's account. Regular users can only access their own history, while managers and admins must specify a target user to retrieve transactions history for any account."
+      parameters:
+        - in: query
+          name: targetUser
+          schema:
+            type: string
+          required: false
+          description: "User ID of the account to retrieve transactions for. Required for manager and admin roles, not used for regular users."
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            default: 10
+          required: false
+          description: "Maximum number of transactions to return. Defaults to 10 if not specified."
+        - in: query
+          name: offset
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+          required: false
+          description: "Number of transactions to skip before starting to collect the result set. Defaults to 0 if not specified."
+      security:
+        - cookieAuth: []
+      tags:
+        - Account Management
+      responses:
+        '200':
+          description: "Transaction successful"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  explanation:
+                    type: string
+                  transactions:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        _id:
+                          type: string
+                        senderEmail:
+                          type: string
+                        recipientEmail:
+                          type: string
+                        amount:
+                          type: number
+                        date:
+                          type: string
+                          format: date-time
+        '400':
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                  message:
+                    type: string
+                oneOf:
+                  - properties:
+                      message:
+                        description: "No target email or invalid email format"
+                  - properties:
+                      message:
+                        description: "Query parameters must be integers"
+                  - properties:
+                      message:
+                        description: "Invalid limit or offset values"
+                  - properties:
+                      message:
+                        description: "Unfound balance"
+        '401':
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                  message:
+                    type: string
+                oneOf:
+                  - properties:
+                      message:
+                        description: "Unauthorized request"
+                  - properties:
+                      message:
+                        description: "Session terminated"
+                  - properties:
+                      message:
+                        description: "Token expired"
+        '404':
+          description: "Not found"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                  message:
+                    type: string
+                    description: "User was not found"
+        '500':
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                  message:
+                    type: string
+                  error:
+                    type: string
+
+  /api/account_managing/transaction:
+    post:
+      summary: "Transfer money from one account to another"
+      description: "Allows a user to transfer a specified amount of money to another user's account identified by email"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:  
+                recipientEmail:
+                  type: string
+                  description: "Email address of the recipient user"
+                amount:
+                  type: number
+                  description: "Amount of money to be transferred"
+              required:
+                - recipientEmail
+                - amount
+      security:
+        - cookieAuth: []
+      tags:
+        - Account Management
+      responses:
+        '200':
+          description: "Successful transaction"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                  message:
+                    type: string
+                  explanation:
+                    type: string
+                  current_balance:
+                    type: number
+        '400':
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                  message:
+                    type: string
+                oneOf:
+                  - properties:
+                      message:
+                        description: "Unfound balance"
+                  - properties:
+                      message:
+                        description: "Generic error message"
+        '401':
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                  message:
+                    type: string
+                oneOf:
+                  - properties:
+                      message:
+                        description: "Unauthorized request"
+                  - properties:
+                      message:
+                        description: "You have logged out from the session"
+                  - properties:
+                      message:
+                        description: "Token expired"
+        '402':
+          description: "Payment Required"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                  message:
+                    type: string
+                    description: "Insufficient funds"
+        '404':
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                  message:
+                    type: string
+                oneOf:
+                  - properties:
+                      message:
+                        description: "User was not found"
+                  - properties:
+                      message:
+                        description: "Invalid recipient"
+        '500':
+          description: "Internal Server Error"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                  message:
+                    type: string
+                    description: "Internal error"
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: jwt
