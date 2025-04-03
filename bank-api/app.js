@@ -8,6 +8,9 @@ const connectionRouter = require("./routes/connection-route");
 const accountOpRouter = require("./routes/account-op-route");
 const cors = require("cors");
 const dbClient = require("./services/db-service");
+const swaggerUi = require('swagger-ui-express');
+const YAML = require('yamljs');
+const swaggerDocument = YAML.load('./swagger.yaml'); // Path to your swagger file
 
 
 const app = express();
@@ -28,6 +31,9 @@ app.use(express.urlencoded({ extended: false })); // Parse URL-encoded bodies (a
 app.use(cookieParser()); // Parse Cookie header and populate req.cookies
 app.use(express.static(path.join(__dirname, "public")));
 app.use(cors()); // Enable Cross-Origin Resource Sharing (CORS) for all routes
+
+// Serve Swagger UI
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.use("/api/connection", connectionRouter);
 app.use("/api/account_managing", accountOpRouter);
