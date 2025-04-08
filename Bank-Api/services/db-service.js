@@ -178,8 +178,8 @@ async function registerTransaction(userEmail, recipientEmail, amount, session = 
     { session }
   );
 
-  const senderAccountId = await findUserAccountId(userEmail)
-  const recipientAccountId = await findUserAccountId(recipientEmail);
+  const senderAccountId = await findUserAccountIdByEmail(userEmail)
+  const recipientAccountId = await findUserAccountIdByEmail(recipientEmail);
 
   const transactionObj = transactionObjs[0];
   await indexTransaction(transactionObj._id, senderAccountId, recipientAccountId, session);
@@ -232,7 +232,6 @@ async function addAccountToUser(userObjectId, accountObjectId, session = null) {
     { new: true, session, runValidators: true }
   );
 }
-
 /*****************************************************************************/
 
 async function extractPropertyFromDoc(modelName , docUniqueIdentifierObj, property ){
@@ -241,14 +240,17 @@ return result
 }
 /*****************************************************************************/
 
-async function findUserAccountId(email){
+async function findUserAccountIdByEmail(email){
   const userDoc = await User.findOne({email : email});
   if (!userDoc){
-    throw new BadQueryError("unfound user");
+    throw new BadQueryError(`Unfound user by email :${email}`);
+  }
+  if(!userDoc.account){
+    throw new BadQueryError(`No account to user by email: ${email}`);
   }
   return userDoc.account;
 }
-
+/*****************************************************************************/
 
 module.exports = {
   mongoose,
@@ -271,4 +273,5 @@ module.exports = {
   deleteManagerInvitationByEmail,
   createAccount,
   addAccountToUser,
+  findUserAccountIdByEmail,
 };

@@ -13,7 +13,6 @@ const {
   addAccountToUser,
 } = require("../services/db-service");
 const sendMail = require("../services/mail-service");
-const getServerIP = require("../services/os-service");
 const bcrypt = require("bcrypt");
 const validator = require("email-validator");
 const validation = require("../helpers/validation-helper");
@@ -50,27 +49,27 @@ async function credentialsValidationManager(credentialsObj, registrationStatus) 
 
 /*****************************************************************************/
 
-async function validateRegistrationDetails(req, res, next) {
-  const { name, userEmail, password } = req.body;
+// async function validateRegistrationDetails(req, res, next) {
+//   const { name, userEmail, password } = req.body;
 
-  try {
-    validateUserInputsFormat(password, userEmail, name);
-  } catch (error) {
-    sendResponse(res, 400, error.message, null, null);
-    return;
-  }
+//   try {
+//     validateUserInputsFormat(password, userEmail, name);
+//   } catch (error) {
+//     sendResponse(res, 400, error.message, null, null);
+//     return;
+//   }
 
-  try {
-    if (await isUniqueUserName(userEmail)) {
-      sendResponse(res, 400, "email address already existed in system", null, null);
-      return;
-    }
-  } catch (error) {
-    sendResponse(res, 500, "internal error", "error", error);
-    return;
-  }
-  next();
-}
+//   try {
+//     if (await isUniqueUserName(userEmail)) {
+//       sendResponse(res, 400, "email address already existed in system", null, null);
+//       return;
+//     }
+//   } catch (error) {
+//     sendResponse(res, 500, "internal error", "error", error);
+//     return;
+//   }
+//   next();
+// }
 
 /*****************************************************************************/
 
@@ -191,7 +190,7 @@ async function sendRegConfirmationMail(req, res, next){
   const mailOptions = {
     to: req.body.userEmail,
     subject: "user register confirmation code",
-    text: mailmessages.getConfirmationMsg(confirmationCode ,userRole),
+    text: mailmessages.getRegisterConfirmationMsg(confirmationCode ,userRole),
   };
 
   sendMail(
@@ -202,7 +201,7 @@ async function sendRegConfirmationMail(req, res, next){
     },
     (error) => {
       console.error("❌ Error:", error.message);
-      sendResponse(res, 500, `mail sending failure with ${+error.messages}`, "error", error);
+      sendResponse(res, 500, `mail sending failure with ${error.messages}`, "error", error);
     }
   );
 }
@@ -358,7 +357,7 @@ async function inviteManagerMember(req, res, next) {
     },
     (error) => {
       console.error("❌ Error:", error.message);
-      sendResponse(res, 500, `mail sending failure with ${+error.messages}`, "error", error);
+      sendResponse(res, 500, `mail sending failure with ${error.messages}`, "error", error);
     }
   );
 }
@@ -449,7 +448,6 @@ function sendResponse(res, resStatus, responseExplanation, dataKey, dataValue) {
 
 
 module.exports = {
-  validateRegistrationDetails,
   registerPendingUser,
   verifyConfirmationCode,
   registerUser,

@@ -4,14 +4,16 @@ const express = require("express");
 const path = require("path");
 const cookieParser = require("cookie-parser");
 const morganLogger = require("morgan");
+const generateRequestId = require("./middlewares/request-id-generator")
 const connectionRouter = require("./routes/connection-route");
 const accountOpRouter = require("./routes/account-op-route");
+const finSchedulerRouter = require("./routes/fin-scheduler-router");
 const cors = require("cors");
 const dbClient = require("./services/db-service");
 const swaggerUi = require('swagger-ui-express');
 const YAML = require('yamljs');
 const swaggerDocument = YAML.load('./swagger.yaml'); // Path to your swagger file
-
+const rabbitService = require("./services/rabbitmq-producer");
 
 const app = express();
 
@@ -31,12 +33,14 @@ app.use(express.urlencoded({ extended: false })); // Parse URL-encoded bodies (a
 app.use(cookieParser()); // Parse Cookie header and populate req.cookies
 app.use(express.static(path.join(__dirname, "public")));
 app.use(cors()); // Enable Cross-Origin Resource Sharing (CORS) for all routes
+app.use(generateRequestId);
 
 // Serve Swagger UI
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.use("/api/connection", connectionRouter);
-app.use("/api/account_managing", accountOpRouter);
+app.use("/api/account-managing", accountOpRouter);
+app.use("/api/fin-scheduler", finSchedulerRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
@@ -56,6 +60,9 @@ app.use(function (err, req, res, next) {
 
 dbClient
   .connectToDB()
+  .then(()=>{
+    rabbitService.init()
+  })
   .then(() => {
     server = app.listen(PORT, () => {
       console.log(`Web-Bank-App server is listening on port ${PORT}.`);
