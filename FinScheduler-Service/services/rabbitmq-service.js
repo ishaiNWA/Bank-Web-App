@@ -65,14 +65,29 @@ function consumeMessages(){
     rabbitChannel.consume( process.env.RABBIT_QUEUE_NAME,
         async function processQueueMessage(msg){
         logger.info(`A rabbit message was fetched and is now being handled...`);
-       
+
+        let waitingTime = INITIAL_PUBLISH_WAITING_TIME_MS;
+        for(let attempt = 0 ; attempt < MAX_PUBLISH_ATTEMPTS ; attempt++){
         try{
             requestId = await msgHandler(msg);
             rabbitChannel.ack(msg);
             logger.info(`\n\n request: ${requestId} was handled successfully`)
+            return;
         }catch(error){
-            // TODO :: handle error
+         
+            if(attempt + 1 === MAX_PUBLISH_ATTEMPTS){
+                logger.error(`failed to process rabbit message after max attempt of ${MAX_PUBLISH_ATTEMPTS}`)
+                await rabbitChannel.nack(msg, false, false); // will  NOT requeue the message after MAX attamtps failure.
+                // TODO :: send failure message to API server for this request ID
+                return;
+            }
+
+            logger.info(` ${attempt + 1} to process message was failed, retry again in a few seconds...`);
+            await sleep(waitingTime);
+            waitingTime *= 2;
+            continue;
         }
+    }
 
     },
     {
