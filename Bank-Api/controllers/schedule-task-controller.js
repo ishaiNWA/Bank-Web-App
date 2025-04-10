@@ -22,8 +22,6 @@ async function validateStandingOrderFormSchema(req, res, next){
         return;
     }
 
-    console.log(`standingOrderForm.senderEmail " ${standingOrderForm.senderEmail}`);
-    console.log(`req.userEmail : ${req.userEmail}`);
     if(standingOrderForm.senderEmail !== req.userEmail){
             sendResponse(res, 400 , "A user can register a standing order only it's own account");
             return;

@@ -1,0 +1,22 @@
+{
+  "name": "finscheduler-service",
+  "version": "1.0.0",
+  "description": "bank-operations-scheduler",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon app.js",
+    "start": "node app.js"
+  },
+  "author": "Ishai Zilberman",
+  "license": "ISC",
+  "dependencies": {
+    "amqplib": "^0.10.7",
+    "dotenv": "^16.4.7",
+    "mongoose": "^8.13.2",
+    "winston": "^3.17.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  }
+}

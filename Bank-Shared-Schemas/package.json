@@ -1,0 +1,16 @@
+{
+  "name": "bank-shared-schemas",
+  "version": "1.0.0",
+  
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "Shared schemas for bank services",
+  "dependencies": {
+    "joi": "^17.13.3"
+  }
+}
