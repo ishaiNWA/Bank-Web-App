@@ -11,6 +11,7 @@
   "author": "Ishai Zilberman",
   "license": "ISC",
   "dependencies": {
+    "bank-shared-schemas": "file:../Bank-Shared-Schemas",
     "amqplib": "^0.10.7",
     "dotenv": "^16.4.7",
     "mongoose": "^8.13.2",
