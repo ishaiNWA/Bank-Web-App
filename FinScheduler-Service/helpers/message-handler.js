@@ -1,5 +1,7 @@
 const logger = require("./logger");
+const dbService = require("../services/mongodb-service");
 const bankSharedSchema = require('bank-shared-schemas');
+
 
 async function msgHandler(msg){
 
@@ -7,7 +9,13 @@ async function msgHandler(msg){
    const finTaskObj = JSON.parse(msg.content.toString('utf8'));
 
    validateFormSchema(finTaskObj)
-   logger.info(JSON.stringify(finTaskObj));
+
+   let context = {
+    requestID : finTaskObj.requestID
+   }
+   
+   pushedTaskDocument = dbService.pushScheduledFinTaskToDb(finTaskObj , context);
+
     let requestID = finTaskObj.requestID;
     return requestID;
 }

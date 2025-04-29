@@ -33,7 +33,7 @@ async function validateStandingOrderFormSchema(req, res, next){
 
     }catch(error){
     if (error instanceof BadQueryError) {
-        sendResponse(res, 400, "Unfound user account for one of the participants in the transaction", "error", error.message);
+        sendResponse(res, 404, "Unfound user account for one of the participants in the transaction", "error", error.message);
         return;
     }
     sendResponse(res, 500, "An unexpected error occured during database query", "error", error)

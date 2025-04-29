@@ -475,6 +475,9 @@ paths:
                 recipientEmail:
                   type: string
                   description: "Email address of the recipient user"
+                senderEmail:
+                  type: string
+                  description: "Email address of the sender - only required/used when transaction is initiated by an Admin as part of a standing order"
                 amount:
                   type: number
                   description: "Amount of money to be transferred"

@@ -1,7 +1,8 @@
-const validation = require("./validation/standing-order-form");
-
+const standingOrderFormValidation = require("./validation/standing-order-form");
+const adminPostTransactionReqBodyValidation = require("./validation/admin-post-transaction-request-body");
 
 module.exports={
-    validateStandingOrderFormSchema : validation.validateStandingOrderFormSchema,
-    standingOrderFormSchema: validation.standingOrderFormSchema
+    validateStandingOrderFormSchema : standingOrderFormValidation.validateStandingOrderFormSchema,
+    standingOrderFormSchema: standingOrderFormValidation.standingOrderFormSchema,
+    validateAdminPostTransactionSchema : adminPostTransactionReqBodyValidation.validateAdminPostTransactionSchema
 }

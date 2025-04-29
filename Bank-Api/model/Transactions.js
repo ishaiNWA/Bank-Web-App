@@ -22,6 +22,10 @@ const transactionsSchema = new Schema({
     type: Date,
     default: Date.now,
   },
+  standingOrderRequestId: {
+    type: String,
+    required : false,
+  }
 });
 
 const Transactions = model("Transaction", transactionsSchema);

@@ -11,10 +11,16 @@
   "author": "Ishai Zilberman",
   "license": "ISC",
   "dependencies": {
-    "bank-shared-schemas": "file:../Bank-Shared-Schemas",
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1",
     "amqplib": "^0.10.7",
+    "axios": "^1.9.0",
+    "bank-shared-schemas": "file:../Bank-Shared-Schemas",
+    "denque": "^2.1.0",
     "dotenv": "^16.4.7",
+    "js-yaml": "^4.1.0",
     "mongoose": "^8.13.2",
+    "node-schedule": "^2.1.1",
     "winston": "^3.17.0"
   },
   "devDependencies": {

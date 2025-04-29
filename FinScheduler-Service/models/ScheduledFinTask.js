@@ -1,9 +1,10 @@
 
 const{Schema, model} = require("mongoose");
+const generateRequestId = require("../helpers/request-id-generator")
 const TRANSACTION_TASK = 'TRANSACTION'
 
-const scheduledBankTaskSchema = new Schema({
-    requestID :{
+const scheduledFinTaskSchema = new Schema({
+    scheduledFinTaskID :{
         type: String,
         required: true,
     },
@@ -28,6 +29,10 @@ const scheduledBankTaskSchema = new Schema({
         type: Date,
         required: true,
     },
+    nextPaymentRequestId :{
+        type: String,
+        required: false, // is generated automatically before each save
+    },
     paymentFrequency:{
         type : Number,
         required: true,
@@ -43,8 +48,13 @@ const scheduledBankTaskSchema = new Schema({
     },
 });
 
-scheduledBankTaskSchema.index({ nextPayment: 1 });
+scheduledFinTaskSchema.index({ nextPayment: 1 });
 
-const ScheduledBankTask =  model("ScheduledBankTask" , scheduledBankTaskSchema );
+scheduledFinTaskSchema.pre("save", function(next){
+    this.nextPaymentRequestId = generateRequestId();
+    next();
+})
 
-module.exports = ScheduledBankTask;
+const ScheduledFinTask =  model("ScheduledFinTask" , scheduledFinTaskSchema );
+
+module.exports = ScheduledFinTask;

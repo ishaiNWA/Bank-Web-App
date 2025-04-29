@@ -13,9 +13,3 @@ router.post("/standing-order",
 
 module.exports = router;
 
-/* 
-    scheduleTaskController.validateStandingOrderFormSchema,
-    scheduleTaskController.submitTaskToScheduleFinService,
-    scheduleTaskController.confirmTaskSchedulingByEmail
-
-*/
