@@ -5,7 +5,7 @@ const {
   createPendingUser,
   findAndDeletePendingUser,
   createUser,
-  createManagerInvitation,
+ // createManagerInvitation,
   findManagerInvitationByEmail,
   executeWithTransaction,
   deleteManagerInvitationByEmail,
@@ -46,30 +46,6 @@ async function credentialsValidationManager(credentialsObj, registrationStatus) 
     //  sendResponse(res, 400, error.message, null, null);
   }
 }
-
-/*****************************************************************************/
-
-// async function validateRegistrationDetails(req, res, next) {
-//   const { name, userEmail, password } = req.body;
-
-//   try {
-//     validateUserInputsFormat(password, userEmail, name);
-//   } catch (error) {
-//     sendResponse(res, 400, error.message, null, null);
-//     return;
-//   }
-
-//   try {
-//     if (await isUniqueUserName(userEmail)) {
-//       sendResponse(res, 400, "email address already existed in system", null, null);
-//       return;
-//     }
-//   } catch (error) {
-//     sendResponse(res, 500, "internal error", "error", error);
-//     return;
-//   }
-//   next();
-// }
 
 /*****************************************************************************/
 
@@ -321,69 +297,69 @@ async function hashingThePassword(unHashedPassword, salt) {
 
 /*****************************************************************************/
 
-async function inviteManagerMember(req, res, next) {
-  generatedToken = Math.random().toString(36).slice(-8);
-  const salt = await bcrypt.genSalt(10);
-  const hashedToken = await hashingThePassword(generatedToken, salt);
+// async function inviteManagerMember(req, res, next) {
+//   generatedToken = Math.random().toString(36).slice(-8);
+//   const salt = await bcrypt.genSalt(10);
+//   const hashedToken = await hashingThePassword(generatedToken, salt);
 
-  const invitedMemberObj = {
-    name: req.body.userName,
-    email: req.body.userEmail,
-    role: USER_ROLES.MANAGER,
-    hashedToken: hashedToken,
-  };
+//   const invitedMemberObj = {
+//     name: req.body.userName,
+//     email: req.body.userEmail,
+//     role: USER_ROLES.MANAGER,
+//     hashedToken: hashedToken,
+//   };
 
-  try {
-    executeWithTransaction(async (session) => {
-      //ensure no duplication of ManagerInvitation document
-      await deleteManagerInvitationByEmail(req.body.userEmail, session);
-      await createManagerInvitation(invitedMemberObj, session);
-    });
-  } catch (error) {
-    sendResponse(res, 500, "internal error", "error", error);
-  }
+//   try {
+//     executeWithTransaction(async (session) => {
+//       //ensure no duplication of ManagerInvitation document
+//       await deleteManagerInvitationByEmail(req.body.userEmail, session);
+//       await createManagerInvitation(invitedMemberObj, session);
+//     });
+//   } catch (error) {
+//     sendResponse(res, 500, "internal error", "error", error);
+//   }
 
-  const mailOptions = {
-    to: req.body.userEmail,
-    subject: "manager invitation code",
-    text: MA
-  };
+//   const mailOptions = {
+//     to: req.body.userEmail,
+//     subject: "manager invitation code",
+//     text: MA
+//   };
 
-  sendMail(
-    mailOptions,
-    (info) => {
-      console.log("✅ Email sent:", info.response);
-      sendResponse(res, 200, "mail sent", "mail info", info);
-    },
-    (error) => {
-      console.error("❌ Error:", error.message);
-      sendResponse(res, 500, `mail sending failure with ${error.messages}`, "error", error);
-    }
-  );
-}
+//   sendMail(
+//     mailOptions,
+//     (info) => {
+//       console.log("✅ Email sent:", info.response);
+//       sendResponse(res, 200, "mail sent", "mail info", info);
+//     },
+//     (error) => {
+//       console.error("❌ Error:", error.message);
+//       sendResponse(res, 500, `mail sending failure with ${error.messages}`, "error", error);
+//     }
+//   );
+// }
 
 /*****************************************************************************/
 
-async function validateManagerInvitation(req, res, next) {
-  let managerInvDoc;
-  try {
-    managerInvDoc = await findManagerInvitationByEmail(req.body.userEmail);
-  } catch (error) {
-    sendResponse(res, 500, "internal error", "error", error);
-    return;
-  }
+// async function validateManagerInvitation(req, res, next) {
+//   let managerInvDoc;
+//   try {
+//     managerInvDoc = await findManagerInvitationByEmail(req.body.userEmail);
+//   } catch (error) {
+//     sendResponse(res, 500, "internal error", "error", error);
+//     return;
+//   }
 
-  if (!managerInvDoc || !(await bcrypt.compare(req.body.token, managerInvDoc.hashedToken))) {
-    sendResponse(
-      res,
-      403,
-      "Invalid invitation or token. Please retry again with correct credentials or request a new invitation link."
-    );
-    return;
-  }
-  req.managerInvDoc = managerInvDoc;
-  next();
-}
+//   if (!managerInvDoc || !(await bcrypt.compare(req.body.token, managerInvDoc.hashedToken))) {
+//     sendResponse(
+//       res,
+//       403,
+//       "Invalid invitation or token. Please retry again with correct credentials or request a new invitation link."
+//     );
+//     return;
+//   }
+//   req.managerInvDoc = managerInvDoc;
+//   next();
+// }
 
 /*****************************************************************************/
 
@@ -452,12 +428,12 @@ module.exports = {
   verifyConfirmationCode,
   registerUser,
   verifyLoginCredentials,
-  inviteManagerMember,
-  validateManagerInvitation,
+ // inviteManagerMember,
+ // validateManagerInvitation,
   registerManager,
   ensureManagerPassword,
   sendRegConfirmationMail,
   setManagerConfirmationMode,
   setClientConfirmationMode,
-  addPasswordToPendingManagerDoc
+  addPasswordToPendingManagerDoc,
 };

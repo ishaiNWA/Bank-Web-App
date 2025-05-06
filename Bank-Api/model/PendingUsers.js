@@ -1,7 +1,12 @@
+
+
 const mongoose = require("mongoose");
 const { Schema, model } = mongoose;
 const ONE_HR_EXP_TIME_IN_SEC = 60 * 60;
 const USER_ROLES = require("../constants/roles")
+
+
+
 const pendingUserSchema = new Schema({
   name: {
     type: String,
@@ -35,5 +40,11 @@ const pendingUserSchema = new Schema({
   },
 });
 
-const pendingUser = model("PendingUser", pendingUserSchema);
-module.exports = pendingUser;
+
+/**
+ * @module PendingUser
+ * @description Schema for pending users awaiting email confirmation to complete registration
+ * Records automatically expire after the configured time period (default: 1 hour)
+ */
+const PendingUser = model("PendingUser", pendingUserSchema);
+module.exports = PendingUser;

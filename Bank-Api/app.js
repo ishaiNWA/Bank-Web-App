@@ -5,8 +5,8 @@ const path = require("path");
 const cookieParser = require("cookie-parser");
 const morganLogger = require("morgan");
 const generateRequestId = require("./middlewares/request-id-generator")
-const connectionRouter = require("./routes/connection-route");
-const accountOpRouter = require("./routes/account-op-route");
+const IAmRouter = require("./routes/i-am-route");
+const finOpsRouter = require("./routes/fin-ops-route");
 const finSchedulerRouter = require("./routes/fin-scheduler-router");
 const cors = require("cors");
 const dbClient = require("./services/db-service");
@@ -38,8 +38,8 @@ app.use(generateRequestId);
 // Serve Swagger UI
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-app.use("/api/connection", connectionRouter);
-app.use("/api/account-managing", accountOpRouter);
+app.use("/api/i-am", IAmRouter);
+app.use("/api/fin-ops", finOpsRouter);
 app.use("/api/fin-scheduler", finSchedulerRouter);
 
 // catch 404 and forward to error handler

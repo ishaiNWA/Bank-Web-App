@@ -3,7 +3,7 @@ const User = require("../model/User");
 const PendingUser = require("../model/PendingUsers");
 const Transaction = require("../model/Transactions");
 const BlackListedToken = require("../model/BlackListedToken");
-const ManagerInvitation = require("../model/ManagerInvitation");
+// const ManagerInvitation = require("../model/ManagerInvitation");
 const Account = require("../model/Account");
 const { json } = require("body-parser");
 const BadQueryError = require("../errors/BadQueryError")
@@ -97,9 +97,9 @@ async function deletePendingUserByEmail(email, session = null) {
 }
 /*****************************************************************************/
 
-async function deleteManagerInvitationByEmail(email, session = null) {
-  return await ManagerInvitation.deleteOne({ email: email }, { session });
-}
+// async function deleteManagerInvitationByEmail(email, session = null) {
+//   return await ManagerInvitation.deleteOne({ email: email }, { session });
+// }
 /*****************************************************************************/
 
 async function createUser(userObj, session = null) {
@@ -200,15 +200,15 @@ async function indexTransaction(transactionId, senderAccountId, recipientAccount
 
 /*****************************************************************************/
 
-async function createManagerInvitation(managerInvitationObj, session = null) {
-  return await ManagerInvitation.create([managerInvitationObj], { session });
-}
+// async function createManagerInvitation(managerInvitationObj, session = null) {
+//   return await ManagerInvitation.create([managerInvitationObj], { session });
+// }
 
 /*****************************************************************************/
 
-async function findManagerInvitationByEmail(email) {
-  return await ManagerInvitation.findOne({ email: email });
-}
+// async function findManagerInvitationByEmail(email) {
+//   return await ManagerInvitation.findOne({ email: email });
+// }
 /*****************************************************************************/
 
 async function createAccount(userObjectId, session = null) {
@@ -259,8 +259,8 @@ module.exports = {
   deletePendingUserByEmail,
   findAndDeletePendingUser,
   createUser,
-  createManagerInvitation,
-  findManagerInvitationByEmail,
+  // createManagerInvitation,
+  // findManagerInvitationByEmail,
   createBlackListedToken,
   createPendingUser,
   isBlackListedToken,
@@ -270,7 +270,7 @@ module.exports = {
   registerTransaction,
   findUserBalance,
   executeWithTransaction,
-  deleteManagerInvitationByEmail,
+  // deleteManagerInvitationByEmail,
   createAccount,
   addAccountToUser,
   findUserAccountIdByEmail,

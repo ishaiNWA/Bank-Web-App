@@ -17,6 +17,10 @@ const blackListedTokensSchema = new Schema({
   },
 });
 
+/**
+ * @module BlackListedToken
+ * @description Schema for tracking invalidated authentication tokens to prevent their reuse
+ */
 const BlackListedToken = model("BlackListedToken", blackListedTokensSchema);
 
 module.exports = BlackListedToken;
