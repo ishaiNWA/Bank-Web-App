@@ -4,12 +4,12 @@ const httpService = require("../services/http-service");
 
 const TARGET_NAME = "bank-api"
 
-function buildAdminPostTransactionReq(taskForm ,context){
+function buildAdminPostTransactionReq(taskDoc ,context){
 
     const reqBody = {
-        senderEmail : taskForm.senderEmail ,
-        recipientEmail  : taskForm.recipientEmail ,
-        amount : taskForm.amount
+        senderEmail : taskDoc.senderEmail ,
+        recipientEmail  : taskDoc.recipientEmail ,
+        amount : taskDoc.amount
     };
     const { error } = adminPostTransactionSheredSchema.validateAdminPostTransactionSchema(reqBody);
     if(error){
@@ -26,9 +26,9 @@ function buildAdminPostTransactionReq(taskForm ,context){
 
 
 
-async function sendPostTransactionTaskToBankApi(taskForm, context){
+async function sendPostTransactionTaskToBankApi(taskDoc, context){
 
-    const reqBody = buildAdminPostTransactionReq(taskForm ,context);
+    const reqBody = buildAdminPostTransactionReq(taskDoc ,context);
 
     const options = {
         method : 'POST',
@@ -42,6 +42,7 @@ async function sendPostTransactionTaskToBankApi(taskForm, context){
 
 }
 
-module.exports = sendPostTransactionTaskToBankApi;
+module.exports = {
+    sendPostTransactionTaskToBankApi};
 
  

@@ -1,15 +1,15 @@
 const logger = require("./logger");
-const dbService = require("../services/mongodb-service");
+const taskService = require("../services/task-service");
 const schedule = require('node-schedule');
 const executor = require("./executor");
 const INTERVAL_IN_MINUTES = 15;
 
-function scheduleTasksToExecution() {
+function initScheduleTaskPolling() {
   const job = schedule.scheduleJob(`*/${INTERVAL_IN_MINUTES} * * * *`, async function() {
 
     let taskFormsArray;
     try {
-      taskFormsArray = await dbService.getReadyToExecuteTasks();      
+      taskFormsArray = await taskService.getReadyToExecuteTasksFromDb();      
     } catch(error) {
       logger.error(`unexpected error during scheduler operation, will try again in ${INTERVAL_IN_MINUTES} minutes, ${error.message}`);
     }
@@ -25,5 +25,5 @@ function scheduleTasksToExecution() {
 }
 
 module.exports = {
-  scheduleTasksToExecution,
+  initScheduleTaskPolling,
 }

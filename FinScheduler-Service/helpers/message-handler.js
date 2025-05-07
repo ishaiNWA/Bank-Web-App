@@ -1,5 +1,5 @@
 const logger = require("./logger");
-const dbService = require("../services/mongodb-service");
+const taskService = require("../services/task-service");
 const bankSharedSchema = require('bank-shared-schemas');
 
 
@@ -14,7 +14,8 @@ async function msgHandler(msg){
     requestID : finTaskObj.requestID
    }
    
-   pushedTaskDocument = dbService.pushScheduledFinTaskToDb(finTaskObj , context);
+   
+   pushedTaskDocument = await taskService.pushScheduledFinTaskToDb(finTaskObj , context);
 
     let requestID = finTaskObj.requestID;
     return requestID;
